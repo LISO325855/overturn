@@ -52,8 +52,11 @@ export class CaptureService {
       note: input.reason ?? null,
       reasonCode: input.reasonCode ?? null,
       secondsToSend: input.secondsToSend ?? null,
+      amountCents: input.amountCents ?? null,
+      currency: input.currency ?? null,
       actor: input.actor ?? null,
       source: "capture",
+      ...(input.scorer ? { scorer: input.scorer, scorerConfig: input.scorerConfig ?? {} } : {}),
     });
 
     return {
@@ -157,6 +160,41 @@ export class CaptureService {
       .where(and(...base))
       .groupBy(sql`${DRAFT_ORIGIN}`)
       .orderBy(sql`${DRAFT_ORIGIN}`);
+    // What the mistakes cost, and which model version they came from. Only corrections that
+    // carried money count, so a team that never sets an amount sees zeros rather than a guess.
+    const money = sql<number>`coalesce(sum(${corrections.amountCents}), 0)::int`;
+    const priced = sql<number>`count(*) filter (where ${corrections.amountCents} is not null)::int`;
+    const [totalCost] = await this.db
+      .select({
+        amountCents: money,
+        priced,
+        currency: sql<string | null>`min(${corrections.currency})`,
+      })
+      .from(corrections)
+      .innerJoin(runs, eq(runs.id, corrections.runId))
+      .where(and(...where));
+    const modelOf = sql<string>`coalesce(${steps.model}, 'unknown')`;
+    const byModelRows = await this.db
+      .select({
+        model: modelOf,
+        agentVersion: runs.agentVersion,
+        captures: count,
+        edited,
+        amountCents: money,
+      })
+      .from(corrections)
+      .innerJoin(runs, eq(runs.id, corrections.runId))
+      .leftJoin(steps, eq(steps.id, corrections.stepId))
+      .where(and(...where))
+      .groupBy(modelOf, runs.agentVersion)
+      .orderBy(desc(money), desc(count))
+      .limit(20);
+    const cost = {
+      amountCents: totalCost?.amountCents ?? 0,
+      currency: totalCost?.currency ?? "usd",
+      priced: totalCost?.priced ?? 0,
+      byModel: byModelRows.map((r) => ({ ...r, agentVersion: r.agentVersion ?? null })),
+    };
     const byAgent = await this.db
       .select({ agent: runs.agent, captures: count, edited })
       .from(corrections)
@@ -185,6 +223,7 @@ export class CaptureService {
       edited: editedN,
       untouchedRate: rate(captures, editedN),
       experts: totals?.experts ?? 0,
+      cost,
       byExpert,
       timeToSend,
       byReason,

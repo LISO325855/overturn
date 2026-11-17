@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@overturn-ai/shared";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
@@ -66,6 +67,9 @@ export default function CapturePage() {
         ``,
         `Sent untouched: ${pct(s.untouchedRate)} (${s.untouched} of ${s.captures})`,
         `Fixes kept: ${s.edited}`,
+        ...(s.cost.amountCents > 0
+          ? [`Cost of those fixes: ${formatMoney(s.cost.amountCents, s.cost.currency)}`]
+          : []),
         `Reviewers capturing: ${s.experts}`,
         ``,
         ...(s.byReason.length
@@ -212,6 +216,49 @@ export default function CapturePage() {
           </CardContent>
         </Card>
       </div>
+
+      {s && s.cost.amountCents > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardDescription>Dollars lost to agent errors, by model version</CardDescription>
+            <CardTitle className="font-mono text-3xl font-normal tabular-nums" data-testid="cost-total">
+              {formatMoney(s.cost.amountCents, s.cost.currency)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <THead>
+                <TR>
+                  <TH>Model</TH>
+                  <TH>Prompt</TH>
+                  <TH className="text-right">Captured</TH>
+                  <TH className="text-right">Wrong</TH>
+                  <TH className="text-right">Lost</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {s.cost.byModel
+                  .filter((m) => m.amountCents > 0)
+                  .map((m) => (
+                    <TR key={`${m.model}:${m.agentVersion ?? ""}`}>
+                      <TD className="font-mono text-xs">{m.model}</TD>
+                      <TD className="font-mono text-xs text-muted-foreground">{m.agentVersion ?? "—"}</TD>
+                      <TD className="text-right tabular-nums">{m.captures}</TD>
+                      <TD className="text-right tabular-nums">{m.edited}</TD>
+                      <TD className="text-right tabular-nums">
+                        {formatMoney(m.amountCents, s.cost.currency)}
+                      </TD>
+                    </TR>
+                  ))}
+              </TBody>
+            </Table>
+            <p className="px-4 py-2 text-xs text-muted-foreground">
+              Refunds, disputes and cancellations the commerce pack captured, against the model version that
+              made the purchase. Every one of them is a case the gate replays before you ship.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {s && s.captures === 0 ? (
         <Card>
