@@ -19,7 +19,7 @@ import { parseArgs } from "node:util";
 import { and, eq, gte, isNotNull, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { createDb } from "../db/client";
-import { cases, corrections, projects, replayJobs, runs } from "../db/schema";
+import { cases, corrections, projects, replayJobs } from "../db/schema";
 import { loadDotEnv } from "../env";
 
 /** Below this, the corpus is not a switching cost. A guess until a customer proves otherwise. */
@@ -28,6 +28,8 @@ export const CORPUS_FLOOR = 200;
 export const PRODUCTION_DAYS = 30;
 /** And it has to have run recently, or it is a gate somebody quietly removed. */
 export const STALE_DAYS = 7;
+/** Two runs a month apart is a trial someone repeated. A gate runs most weeks a team ships. */
+export const PRODUCTION_MIN_WEEKS = 3;
 
 export type GateStage = "none" | "manual" | "ci" | "gating" | "production";
 
@@ -39,6 +41,8 @@ export interface ProjectPmf {
     firstGatingAt: string | null;
     lastGatingAt: string | null;
     daysGating: number;
+    /** Distinct weeks it ran in, out of the last four. Production needs most of them. */
+    recentWeeks: number;
     blockedARelease: boolean;
     repos: string[];
   };
@@ -60,15 +64,26 @@ const DAY = 86_400_000;
 const days = (ms: number) => Math.floor(ms / DAY);
 
 /**
+ * Events that can stop a merge. A push-to-main run is a monitor, not a gate: by the time it runs
+ * the code is already in. A runner this list does not cover reads as `ci` rather than `gating`,
+ * which understates the customer — better than a number that flatters us.
+ */
+const GATING_EVENTS = new Set(["pull_request", "pull_request_target", "merge_group", "merge_request_event"]);
+
+/**
  * A replay only counts as gating when CI ran it against the branch the team merges into. A replay
  * on a feature branch, or one a person started from the CLI, is someone trying it out.
+ *
+ * This is self-reported: the CLI fills it in and an API key holder could post anything. That is
+ * fine for what it is — a customer faking this is only deceiving us about their own adoption, and
+ * nothing is granted on the strength of it.
  */
 function isGating(ci: Record<string, unknown> | null): boolean {
   if (!ci) return false;
   const event = typeof ci.event === "string" ? ci.event : "";
   const base = typeof ci.baseRef === "string" ? ci.baseRef : "";
   const dflt = typeof ci.defaultBranch === "string" ? ci.defaultBranch : "";
-  if (event !== "pull_request" && event !== "merge_request_event") return false;
+  if (!GATING_EVENTS.has(event)) return false;
   // No default branch reported (an older CLI, or an unknown runner): take the usual names.
   return dflt ? base === dflt : base === "main" || base === "master";
 }
@@ -95,9 +110,13 @@ export async function pmf(db: Db, weeks = 12): Promise<ProjectPmf[]> {
     const last = times.at(-1) ?? null;
     const daysGating = first && last ? days(last - first) : 0;
     const fresh = last !== null && days(now - last) <= STALE_DAYS;
+    // How many of the trailing four weeks it actually ran in: two runs a month apart is a trial
+    // repeated once, and reading that as production is the exact mistake this metric exists to
+    // avoid. A real gate leaves a mark most weeks.
+    const recentWeeks = new Set(times.filter((t) => days(now - t) <= 28).map((t) => isoWeekOf(t))).size;
     const stage: GateStage =
       gating.length > 0
-        ? daysGating >= PRODUCTION_DAYS && fresh
+        ? daysGating >= PRODUCTION_DAYS && fresh && recentWeeks >= PRODUCTION_MIN_WEEKS
           ? "production"
           : "gating"
         : jobs.length > 0
@@ -141,17 +160,28 @@ export async function pmf(db: Db, weeks = 12): Promise<ProjectPmf[]> {
 
     const firstAt = span?.firstAt ? new Date(span.firstAt) : null;
     const weeksSinceFirst = firstAt ? Math.floor(days(now - firstAt.getTime()) / 7) : 0;
-    // Weeks one to three are the honeymoon: someone is evaluating, and they correct everything.
-    const mature = firstAt
-      ? weekly.filter((w) => {
-          const [y, n] = w.week.split("-W");
-          const start = isoWeekStart(Number(y), Number(n));
-          return days(start - firstAt.getTime()) >= 21;
-        })
-      : [];
+    /**
+     * The weeks that count: whole weeks, starting three weeks after the first correction. Weeks
+     * one to three are the honeymoon, when someone is evaluating and corrects everything.
+     *
+     * Every one of those weeks counts, including the ones with nothing in them. A team that
+     * corrected once in eight weeks has churned, and averaging only the weeks they showed up in
+     * would report that as one a week — the metric would be at its most flattering exactly when
+     * the customer is leaving. The current week is left out because it has not finished.
+     */
+    const counted = weekly.reduce((m, w) => m.set(w.week, w.corrections), new Map<string, number>());
+    const thisWeek = isoWeekOf(now);
+    const mature: number[] = [];
+    if (firstAt) {
+      for (let t = isoWeekStart(...isoWeekParts(firstAt.getTime() + 21 * DAY)); t < now; t += 7 * DAY) {
+        const label = isoWeekOf(t);
+        if (label === thisWeek) continue;
+        mature.push(counted.get(label) ?? 0);
+      }
+    }
     const perWeekFromWeekFour =
       weeksSinceFirst >= 4 && mature.length > 0
-        ? Math.round((mature.reduce((a, w) => a + w.corrections, 0) / mature.length) * 10) / 10
+        ? Math.round((mature.reduce((a, n) => a + n, 0) / mature.length) * 10) / 10
         : null;
 
     // Sean Ellis's rule: ask people who actually use the thing, not people who bought it.
@@ -179,6 +209,7 @@ export async function pmf(db: Db, weeks = 12): Promise<ProjectPmf[]> {
         firstGatingAt: first ? new Date(first).toISOString() : null,
         lastGatingAt: last ? new Date(last).toISOString() : null,
         daysGating,
+        recentWeeks,
         blockedARelease,
         repos: [
           ...new Set(gating.map((j) => (typeof j.ci?.repo === "string" ? j.ci.repo : "")).filter(Boolean)),
@@ -202,6 +233,23 @@ export async function pmf(db: Db, weeks = 12): Promise<ProjectPmf[]> {
   return out;
 }
 
+/** The ISO year and week an instant falls in, in the shape isoWeekStart takes. */
+export function isoWeekParts(ms: number): [number, number] {
+  const d = new Date(ms);
+  const day = d.getUTCDay() || 7;
+  // The Thursday of this week decides which ISO year and week number the week belongs to.
+  const thursday = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + (4 - day) * DAY;
+  const year = new Date(thursday).getUTCFullYear();
+  const week = Math.round((thursday - Date.UTC(year, 0, 4)) / (7 * DAY)) + 1;
+  return [year, week];
+}
+
+/** The label Postgres' to_char(..., 'IYYY-"W"IW') produces for an instant. */
+export function isoWeekOf(ms: number): string {
+  const [y, w] = isoWeekParts(ms);
+  return `${y}-W${String(w).padStart(2, "0")}`;
+}
+
 /** Monday of an ISO week, as epoch ms. */
 export function isoWeekStart(year: number, week: number): number {
   const jan4 = Date.UTC(year, 0, 4);
@@ -218,7 +266,7 @@ function render(all: ProjectPmf[]): string {
       g.stage === "production"
         ? `production — ${g.daysGating}d on ${g.repos.join(", ") || "a repo"}${g.blockedARelease ? ", has blocked a build" : ""}`
         : g.stage === "gating"
-          ? `gating — ${g.daysGating}d of ${PRODUCTION_DAYS} needed${g.blockedARelease ? ", has blocked a build" : ""}`
+          ? `gating — ${g.daysGating}d of ${PRODUCTION_DAYS}, ran in ${g.recentWeeks} of the last 4 weeks (needs ${PRODUCTION_MIN_WEEKS})${g.blockedARelease ? ", has blocked a build" : ""}`
           : g.stage === "ci"
             ? "runs in CI, but not on pull requests into the default branch"
             : g.stage === "manual"

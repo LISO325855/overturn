@@ -27,30 +27,48 @@ worse than no number because it looks like evidence.
 
 Question 1 is the number. Questions 2 to 4 are what we actually act on.
 
+## First, is there a result at all
+
+With three design partners this is likely eight to twelve respondents, and one person changing
+their mind moves a twelve-person percentage by eight points. So the sample size decides which rule
+applies, and that is settled here rather than in January:
+
+- **Fewer than 8 eligible respondents** — no result. Do not compute a percentage. The survey has
+  told us nothing about fit; it has told us adoption is too thin to measure, which is its own
+  answer and the thing to go fix.
+- **8 to 19** — the percentage is directional. It can trigger the 40% branch below, because a
+  number that high on a small sample is hard to get by accident. It cannot trigger the pivot branch
+  on its own: for that it needs the verbatim pattern named below.
+- **20 or more** — the percentage stands on its own, in all three branches.
+
 ## The rule, committed in advance
 
-- **40% or more very disappointed** — fit. Stop building adapters and on-ramps and put everything
-  into distribution.
+- **40% or more very disappointed** — fit, at any n of 8 or more. Stop building adapters and
+  on-ramps and put everything into distribution.
 - **20% to 39%** — optimizable. Narrow to whoever answered "very disappointed", read their answers
   to question 2, and rebuild the positioning around exactly those people. Rahul Vohra's claim is
   that 20 reaches 40 by subtraction, not addition.
-- **Below 20%** — pivot. Keep the codebase and keep the correction record as the core object, but
-  the buyer, the surface or the vertical is wrong. This is the same branch as the existing funnel
-  fallback: if no design partner has forwarded a Capture scorecard after three, sell to AI platform
-  teams at insurers instead of support ops.
+- **Below 20%** — pivot: keep the codebase and the correction record as the core object, but the
+  buyer, the surface or the vertical is wrong. At n of 20 or more this fires on the number alone.
+  Between 8 and 19 it fires when the verbatims agree — three or more respondents describing the
+  main benefit as something we are not building, or describing no benefit. A low number with
+  scattered answers at that n means run it again at twenty users.
 
-## The caveat that matters more than the percentage
+That pivot branch is not the same thing as the funnel's existing fallback, which fires on a
+different trigger: no design partner forwarding a Capture scorecard after three. They can fire
+independently, and either one alone is enough to act on.
 
-With three design partners this will be eight to twelve respondents. A percentage from twelve people
-is not a measurement — one person changing their mind moves it by eight points. So:
+## What the verbatims are for
 
-- The percentage is directional only. Do not put it in a deck, and do not let it be the reason for
-  or against anything on its own.
-- The verbatims are the signal. If four people independently describe the same benefit in their own
-  words, that is worth more than any number this survey can produce.
-- The honest version of the rule above is: **below 20% with consistent verbatims about the wrong
-  thing** means pivot. A low number with no pattern in the answers means the sample is too small and
-  the survey has told us nothing — run it again when there are twenty users, not three accounts.
+Questions 2 to 4 are not colour for the number. If four people independently describe the same
+benefit in their own words, that sentence is the positioning, and it outranks anything the
+percentage suggests about what to build next.
 
 Deciding this now, in writing, is the whole exercise. Re-reading it in January and wanting to argue
 with it is the expected outcome and not a reason to change it.
+
+## Mechanics
+
+A scheduled task fires on the date and runs this document: it lists the eligible respondents with
+`pnpm pmf`, drafts the email for Shireen to send, and reports against the rules above. If that task
+has been deleted, the date still stands — run it by hand.

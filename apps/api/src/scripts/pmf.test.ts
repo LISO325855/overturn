@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createDb, type Db } from "../db/client";
 import { cases, corrections, replayJobs, runs } from "../db/schema";
 import { startTestApp, TEST_DATABASE_URL, type TestContext } from "../test/harness";
-import { isoWeekStart, pmf } from "./pmf";
+import { isoWeekOf, isoWeekParts, isoWeekStart, pmf } from "./pmf";
 
 /**
  * These numbers decide whether Shireen keeps building this, so the line between "someone tried it"
@@ -17,6 +17,18 @@ describe("isoWeekStart", () => {
     expect(new Date(isoWeekStart(2026, 1)).toISOString().slice(0, 10)).toBe("2025-12-29");
     expect(new Date(isoWeekStart(2026, 47)).toISOString().slice(0, 10)).toBe("2026-11-16");
     expect(new Date(isoWeekStart(2027, 1)).toISOString().slice(0, 10)).toBe("2027-01-04");
+  });
+
+  it("round-trips with isoWeekOf, which has to match what Postgres labels a week", () => {
+    for (const iso of ["2026-01-01", "2026-11-16", "2026-11-22", "2026-12-31", "2027-01-03"]) {
+      const ms = Date.parse(`${iso}T12:00:00Z`);
+      const [y, w] = isoWeekParts(ms);
+      expect(isoWeekOf(ms), iso).toBe(`${y}-W${String(w).padStart(2, "0")}`);
+      // Monday of that week is on or before the day itself, and within seven days of it.
+      const monday = isoWeekStart(y, w);
+      expect(monday, iso).toBeLessThanOrEqual(ms);
+      expect(ms - monday, iso).toBeLessThan(7 * 86_400_000);
+    }
   });
 });
 
@@ -91,6 +103,18 @@ describe("pmf", () => {
     expect(p?.gate.stage).toBe("ci");
   });
 
+  it("counts a merge queue and a pull_request_target as gating too", async () => {
+    await replay({ provider: "github", event: "merge_group", baseRef: "main", defaultBranch: "main" }, 2);
+    const [p] = await pmf(db);
+    expect(p?.gate.stage).toBe("gating");
+  });
+
+  it("does not call a push to main a gate — by then the code is already in", async () => {
+    await replay({ provider: "github", event: "push", baseRef: "main", defaultBranch: "main" }, 2);
+    const [p] = await pmf(db);
+    expect(p?.gate.stage).toBe("ci");
+  });
+
   it("counts pull requests into the default branch, but not as production until they persist", async () => {
     const pr = {
       provider: "github",
@@ -105,7 +129,7 @@ describe("pmf", () => {
     expect(p?.gate.repos).toEqual(["acme/app"]);
   });
 
-  it("is production once the gate has run for a month and ran again this week", async () => {
+  it("is not production on two runs a month apart — that is a trial someone repeated", async () => {
     const pr = {
       provider: "github",
       repo: "acme/app",
@@ -114,7 +138,22 @@ describe("pmf", () => {
       defaultBranch: "main",
     };
     await replay(pr, 40);
-    await replay(pr, 1, false);
+    await replay(pr, 1);
+    const [p] = await pmf(db);
+    expect(p?.gate.stage).toBe("gating");
+    expect(p?.gate.recentWeeks).toBe(1);
+  });
+
+  it("is production when the gate ran most weeks for a month and ran again this week", async () => {
+    const pr = {
+      provider: "github",
+      repo: "acme/app",
+      event: "pull_request",
+      baseRef: "main",
+      defaultBranch: "main",
+    };
+    await replay(pr, 40);
+    for (const d of [21, 14, 7, 1]) await replay(pr, d, d !== 21);
     const [p] = await pmf(db);
     expect(p?.gate.stage).toBe("production");
     expect(p?.gate.daysGating).toBeGreaterThanOrEqual(30);
@@ -130,15 +169,25 @@ describe("pmf", () => {
     expect(p?.gate.stage).toBe("gating");
   });
 
-  it("counts only people, and only from week four, as retention", async () => {
-    await correction("dana@acme.com", 40);
-    await correction("dana@acme.com", 38);
-    // Week one is the honeymoon and does not count; these two are inside it.
-    await correction("dana@acme.com", 5);
-    await correction(null, 5, "sdk"); // the SDK is not a person
+  it("counts the weeks nobody corrected, so churn shows up as churn", async () => {
+    // First correction 70 days ago, so the honeymoon ended 49 days ago. One correction since.
+    await correction("dana@acme.com", 70);
+    await correction("dana@acme.com", 69);
+    await correction("dana@acme.com", 10);
     const [p] = await pmf(db);
-    expect(p?.corrections.weeksSinceFirst).toBeGreaterThanOrEqual(5);
+    expect(p?.corrections.weeksSinceFirst).toBeGreaterThanOrEqual(9);
+    // Roughly seven mature weeks holding one correction between them. Averaging only the week it
+    // landed in would report 1.0 — the metric at its most flattering as the customer leaves.
+    expect(p?.corrections.perWeekFromWeekFour).toBeLessThan(0.3);
     expect(p?.corrections.perWeekFromWeekFour).toBeGreaterThan(0);
+  });
+
+  it("counts people only — the SDK and implicit approval are not retention", async () => {
+    await correction("dana@acme.com", 40);
+    await correction(null, 5, "sdk");
+    await correction("nobody@acme.com", 5, "implicit");
+    const [p] = await pmf(db);
+    expect(p?.corrections.weekly.reduce((a, w) => a + w.corrections, 0)).toBe(1);
   });
 
   it("lists who may answer the survey: two corrections in the last fortnight", async () => {
