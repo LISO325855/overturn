@@ -16,6 +16,32 @@ import {
 } from "./index.js";
 
 describe("purchaseDecisionFrom", () => {
+  // The gate's dangerous direction is a false decline: it passes a release that never re-decided.
+  it("does not read a decline out of an agent that only looked around", () => {
+    expect(
+      purchaseDecisionFrom({ tool_calls: [{ name: "search_catalogue", args: { q: "cable" } }] }),
+    ).toBeNull();
+    expect(purchaseDecisionFrom({ tool_calls: [] })).toBeNull();
+  });
+
+  it("does not read a decline out of prose that never mentions the purchase", () => {
+    expect(purchaseDecisionFrom("Aborted: the catalogue API timed out.")).toBeNull();
+    expect(purchaseDecisionFrom("I'll ask the user which colour they prefer.")).toBeNull();
+    expect(purchaseDecisionFrom("The merchant refused to ship to that address.")).toBeNull();
+    expect(purchaseDecisionFrom("Holding off on the summary until the run finishes.")).toBeNull();
+  });
+
+  it("still reads a decline out of prose that names the purchase", () => {
+    for (const text of [
+      "Declining to buy — the instruction says one unit, the cart has three.",
+      "I won't order this; it is over the user's limit.",
+      "No purchase: nothing in the catalogue matches.",
+      "Holding off on the order until the user confirms.",
+    ]) {
+      expect(purchaseDecisionFrom(text)?.action, text).toBe("decline");
+    }
+  });
+
   it("reads the capture shape a commerce case freezes", () => {
     expect(
       purchaseDecisionFrom({ action: "buy", items: [{ sku: "A-1", quantity: 2 }], reply: "ordering two" }),

@@ -44,7 +44,7 @@ inputs:
     required: false
     default: "0"
   max-money-at-risk:
-    description: "Fail when the regressions' past refunds exceed this many cents (commerce pack); empty = any regression already fails"
+    description: "Spend a budget instead of counting: fail only when the regressions' past refunds exceed this many cents (commerce pack). Set, it replaces fail-on-regression; empty, any regression over fail-on-regression fails."
     required: false
   allow-new-paths:
     description: "Do not fail the check on new paths (tool calls with no recording); default follows the project setting"
@@ -121,9 +121,13 @@ runs:
           echo "report=$REPORT" >> "$GITHUB_OUTPUT"
           cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
           FAILED=false
-          [ "$REGRESSIONS" -gt "${{ inputs.fail-on-regression }}" ] && FAILED=true
-          # Commerce pack: a release that would repeat this much in past refunds never ships.
-          if [ -n "${{ inputs.max-money-at-risk }}" ] && [ "$MONEY" -gt "${{ inputs.max-money-at-risk }}" ]; then FAILED=true; fi
+          # A money budget and a regression count are two ways to say the same thing, so a repo
+          # that sets the budget is judged on the budget alone — otherwise it could never spend it.
+          if [ -n "${{ inputs.max-money-at-risk }}" ]; then
+            [ "$MONEY" -gt "${{ inputs.max-money-at-risk }}" ] && FAILED=true
+          else
+            [ "$REGRESSIONS" -gt "${{ inputs.fail-on-regression }}" ] && FAILED=true
+          fi
           if [ "$NEW_PATHS" -gt 0 ] && [ "${{ inputs.allow-new-paths }}" != "true" ] && [ "$NEW_PATHS_BLOCK" = "true" ]; then FAILED=true; fi
           echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
         else
@@ -167,5 +171,10 @@ runs:
       if: ${{ steps.replay.outputs.failed == 'true' }}
       shell: bash
       run: |
-        echo "::error::Overturn: ${{ steps.replay.outputs.regressions }} regression(s) (limit ${{ inputs.fail-on-regression }}), ${{ steps.replay.outputs.new_paths }} new path(s) not yet accepted, \$$(( ${{ steps.replay.outputs.money_at_risk }} / 100 )) of past refunds would happen again"
+        LIMIT="${{ inputs.max-money-at-risk }}"
+        if [ -n "$LIMIT" ]; then
+          echo "::error::Overturn: \$$(( ${{ steps.replay.outputs.money_at_risk }} / 100 )) of past refunds would happen again (budget \$$(( LIMIT / 100 ))), across ${{ steps.replay.outputs.regressions }} regression(s); ${{ steps.replay.outputs.new_paths }} new path(s) not yet accepted"
+        else
+          echo "::error::Overturn: ${{ steps.replay.outputs.regressions }} regression(s) (limit ${{ inputs.fail-on-regression }}), ${{ steps.replay.outputs.new_paths }} new path(s) not yet accepted"
+        fi
         exit 1

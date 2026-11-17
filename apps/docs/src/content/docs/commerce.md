@@ -132,11 +132,13 @@ Gate: red — 2 regressions ($102.50 of past refunds would happen again)
     api-key: ${{ secrets.OVERTURN_API_KEY }}
     model: openai/gpt-5.1-mini
     tag: commerce
-    max-money-at-risk: "5000"   # optional: allow up to $50 of recurrence
+    max-money-at-risk: "5000"   # optional: a $50 budget instead of a count
 ```
 
-The action exposes `money-at-risk` in cents as an output. Leave `max-money-at-risk` unset and any
-regression fails the check, as before.
+Leave `max-money-at-risk` unset and the gate works as it always has: any regression over
+`fail-on-regression` (default 0) fails the check. Set it and you are spending a budget instead of
+counting, so it *replaces* that count — regressions pass until their past refunds add up to more
+than the budget. The action exposes `money-at-risk` in cents as an output either way.
 
 ## 5. The scorecard
 
