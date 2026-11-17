@@ -140,16 +140,23 @@ export async function pmf(db: Db, weeks = 12): Promise<ProjectPmf[]> {
       sql`${corrections.source} in ('ui','capture')`,
     );
     const week = sql<string>`to_char(date_trunc('week', ${corrections.createdAt}), 'IYYY-"W"IW')`;
-    const weekly = await db
-      .select({
-        week,
-        corrections: sql<number>`count(*)::int`,
-        people: sql<number>`count(distinct ${corrections.actor})::int`,
-      })
-      .from(corrections)
-      .where(and(byPerson, gte(corrections.createdAt, since)))
-      .groupBy(week)
-      .orderBy(week);
+    // Two queries on purpose. `weekly` is the display series and honours --weeks; `allWeeks` runs
+    // over the customer's whole history, because the average below walks from their first
+    // correction. Windowing that one would read every week before the window as a week nobody
+    // corrected, so a long-standing customer's retention would fall as --weeks got smaller.
+    const counts = (where: ReturnType<typeof and>) =>
+      db
+        .select({
+          week,
+          corrections: sql<number>`count(*)::int`,
+          people: sql<number>`count(distinct ${corrections.actor})::int`,
+        })
+        .from(corrections)
+        .where(where)
+        .groupBy(week)
+        .orderBy(week);
+    const weekly = await counts(and(byPerson, gte(corrections.createdAt, since)));
+    const allWeeks = await counts(byPerson);
     const [span] = await db
       .select({
         firstAt: sql<Date | null>`min(${corrections.createdAt})`,
@@ -169,7 +176,7 @@ export async function pmf(db: Db, weeks = 12): Promise<ProjectPmf[]> {
      * would report that as one a week — the metric would be at its most flattering exactly when
      * the customer is leaving. The current week is left out because it has not finished.
      */
-    const counted = weekly.reduce((m, w) => m.set(w.week, w.corrections), new Map<string, number>());
+    const counted = allWeeks.reduce((m, w) => m.set(w.week, w.corrections), new Map<string, number>());
     const thisWeek = isoWeekOf(now);
     const mature: number[] = [];
     if (firstAt) {

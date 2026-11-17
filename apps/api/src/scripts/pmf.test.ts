@@ -182,6 +182,20 @@ describe("pmf", () => {
     expect(p?.corrections.perWeekFromWeekFour).toBeGreaterThan(0);
   });
 
+  it("does not let the display window change the retention number", async () => {
+    // A customer older than --weeks: every week before the window must still count as a week they
+    // could have corrected in, or their retention improves as we look at less of their history.
+    await correction("dana@acme.com", 150);
+    await correction("dana@acme.com", 149);
+    await correction("dana@acme.com", 100);
+    await correction("dana@acme.com", 20);
+    const [wide] = await pmf(db, 40);
+    const [narrow] = await pmf(db, 4);
+    expect(narrow?.corrections.perWeekFromWeekFour).toBe(wide?.corrections.perWeekFromWeekFour);
+    // ~18 mature weeks holding two corrections, whichever window we render.
+    expect(wide?.corrections.perWeekFromWeekFour).toBeLessThan(0.2);
+  });
+
   it("counts people only — the SDK and implicit approval are not retention", async () => {
     await correction("dana@acme.com", 40);
     await correction(null, 5, "sdk");
