@@ -17,8 +17,11 @@ git rev-parse --verify --quiet "$BASE" >/dev/null || {
   exit 1
 }
 
+# --no-merges: on a pull_request event actions/checkout gives GitHub's synthetic merge commit,
+# authored by the PR opener's noreply address and committed by GitHub itself. It is not anyone's
+# work and never reaches main. A real merge commit is nobody's authored change either.
 range="$BASE..HEAD"
-commits=$(git rev-list "$range")
+commits=$(git rev-list --no-merges "$range")
 if [ -z "$commits" ]; then
   echo "attribution: no commits in $range, nothing to check"
   exit 0
