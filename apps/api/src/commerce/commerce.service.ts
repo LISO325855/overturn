@@ -70,8 +70,11 @@ export class CommerceService {
     rawBody: Buffer,
     headers: Record<string, string | string[] | undefined>,
   ): Promise<CommerceWebhookResult> {
+    // An unknown project, a source with no secret and a bad signature all answer the same way,
+    // so this endpoint cannot be used to find out which project ids exist or what they use.
     const secret = await this.secretFor(projectId, source);
-    this.verify(source, rawBody, headers, secret);
+    this.verify(source, rawBody, headers, secret ?? DUMMY_SECRET);
+    if (!secret) throw new UnauthorizedException("Signature check failed");
 
     let payload: unknown;
     try {
@@ -87,7 +90,7 @@ export class CommerceService {
     if (!event) return { ok: true, skipped: "event is not a refund, dispute or cancellation" };
 
     // Retries must not become second corrections; the provider's event id is the key.
-    const eventKey = `${source}:${event.eventId}`;
+    const eventKey = `${projectId}:${source}:${event.eventId}`;
     const claimed = await this.db
       .insert(webhookEvents)
       .values({ id: eventKey, projectId, source })
@@ -220,12 +223,15 @@ export class CommerceService {
     return parseSettings(p.settings);
   }
 
-  private async secretFor(projectId: string, source: CommerceSource): Promise<string> {
-    const settings = await this.settings(projectId);
-    const secret = settings.commerce[SECRET_KEY[source]];
-    // No secret means no endpoint: say nothing about whether the project exists.
-    if (!secret) throw new NotFoundException(`No ${source} webhook is configured for this project`);
-    return secret;
+  /** The configured secret, or null — never an error, so the answer looks the same either way. */
+  private async secretFor(projectId: string, source: CommerceSource): Promise<string | null> {
+    const [p] = await this.db
+      .select({ settings: projects.settings })
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .limit(1);
+    if (!p) return null;
+    return parseSettings(p.settings).commerce[SECRET_KEY[source]];
   }
 
   private verify(
@@ -246,6 +252,9 @@ export class CommerceService {
     }
   }
 }
+
+/** Verified against when no secret is configured, so the work and the answer do not vary. */
+const DUMMY_SECRET = "overturn-no-endpoint-configured";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

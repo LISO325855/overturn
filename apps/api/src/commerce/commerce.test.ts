@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { request } from "node:http";
 import type { CaptureStats, Case, Correction, IngestPayload, Project } from "@overturn-ai/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { api, startTestApp, type TestContext } from "../test/harness";
@@ -187,15 +188,54 @@ describe("POST /v1/commerce/webhooks", () => {
     expect(none.status).toBe(401);
   });
 
-  it("404s a source the project has not configured, and 400s a malformed path", async () => {
+  it("gives nothing away: an unconfigured source and an unknown project answer like a bad signature", async () => {
     const body = JSON.stringify({ id: "x", type: "ORDER_CANCELLED", data: { order_id: "o" } });
     const sig = createHmac("sha256", "whatever").update(body).digest("hex");
-    const res = await post(`/v1/commerce/webhooks/zinc/${ctx.projectId}`, body, { "x-zinc-signature": sig });
-    expect(res.status).toBe(404);
-    const bad = await post(`/v1/commerce/webhooks/stripe/not-a-uuid`, body, {});
-    expect(bad.status).toBe(400);
-    const unknown = await post(`/v1/commerce/webhooks/paypal/${ctx.projectId}`, body, {});
-    expect(unknown.status).toBe(400);
+    // Configured project, source with no secret.
+    const unconfigured = await post(`/v1/commerce/webhooks/zinc/${ctx.projectId}`, body, {
+      "x-zinc-signature": sig,
+    });
+    // A project id that does not exist at all.
+    const nobody = await post("/v1/commerce/webhooks/zinc/01935000-0000-7000-8000-0000000fffff", body, {
+      "x-zinc-signature": sig,
+    });
+    // A real endpoint with a wrong signature.
+    const wrongSig = await post(`/v1/commerce/webhooks/rye/${ctx.projectId}`, body, {
+      "x-rye-signature": sig,
+    });
+    for (const r of [unconfigured, nobody, wrongSig]) {
+      expect(r.status).toBe(401);
+      expect(JSON.stringify(r.body)).toBe(JSON.stringify(wrongSig.body));
+    }
+  });
+
+  it("400s a malformed path and an unknown source", async () => {
+    const body = JSON.stringify({ id: "x" });
+    expect((await post("/v1/commerce/webhooks/stripe/not-a-uuid", body, {})).status).toBe(400);
+    expect((await post(`/v1/commerce/webhooks/paypal/${ctx.projectId}`, body, {})).status).toBe(400);
+  });
+
+  it("refuses an oversized body on the declared length, before reading any of it", async () => {
+    // Raw http: the point is that the answer comes from the header alone, with the body unsent.
+    const url = new URL(`${ctx.baseUrl}/v1/commerce/webhooks/stripe/${ctx.projectId}`);
+    const status = await new Promise<number>((resolve, reject) => {
+      const req = request(
+        {
+          hostname: url.hostname,
+          port: url.port,
+          path: url.pathname,
+          method: "POST",
+          headers: { "content-type": "application/json", "content-length": 2 * 1024 * 1024 },
+        },
+        (res) => {
+          res.resume();
+          resolve(res.statusCode ?? 0);
+        },
+      );
+      req.on("error", reject);
+      req.write('{"pad":"x"}'); // far less than we declared; the server never waits for the rest
+    });
+    expect(status).toBe(413);
   });
 
   it("answers 200 and records nothing when no run matches, so a later retry can still land", async () => {
@@ -242,6 +282,25 @@ describe("POST /v1/commerce/webhooks", () => {
     const model = stats.body.cost.byModel.find((m) => m.model === "gpt-4.1-mini");
     expect(model).toMatchObject({ agentVersion: "buyer-2.1" });
     expect(model?.amountCents).toBeGreaterThanOrEqual(10250);
+  });
+});
+
+describe("the idempotency key", () => {
+  it("is per project, so one project cannot suppress another's event", async () => {
+    const [{ rows }] = [{ rows: null }];
+    expect(rows).toBeNull();
+    const body = stripeBody({ payment_intent: "pi_live_1", id: "ch_shared" });
+    const headers = stripeHeaders(body);
+    const first = await post(`/v1/commerce/webhooks/stripe/${ctx.projectId}`, body, headers);
+    expect(first.body).toMatchObject({ ok: true });
+    // The same event id against a project that never configured stripe is refused on the
+    // signature, not silently swallowed as "already handled".
+    const other = await post(
+      "/v1/commerce/webhooks/stripe/01935000-0000-7000-8000-0000000fffff",
+      body,
+      headers,
+    );
+    expect(other.status).toBe(401);
   });
 });
 
