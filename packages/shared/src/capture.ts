@@ -128,7 +128,18 @@ export function reasonPackFrom(raw: unknown): ReasonPack {
 }
 
 /** Corrections with these codes are kept as evidence but never enter the suite or the export. */
-export const SUITE_EXCLUDED_REASON_CODES: readonly string[] = ["tone_wording"];
+/**
+ * Kept as evidence, never replayed, never exported. A tone fix is a preference rather than a rule;
+ * the three commerce codes are refunds nobody has blamed the agent for, or has blamed on something
+ * the agent could not have decided differently. A human attributing one to the agent moves it into
+ * the suite; until then it is a record of money, not a test.
+ */
+export const SUITE_EXCLUDED_REASON_CODES: readonly string[] = [
+  "tone_wording",
+  "unattributed",
+  "fraudulent",
+  "late_or_undeliverable",
+];
 
 export function reasonCodeLabel(code: string | null | undefined): string | null {
   if (!code) return null;

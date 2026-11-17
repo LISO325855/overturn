@@ -101,12 +101,22 @@ export async function runDemo(ov: Overturn, baseUrl: string): Promise<DemoResult
   const delivered = (await res.json()) as { caseId?: string | null; amountCents?: number; skipped?: string };
   if (delivered.skipped) throw new Error(`webhook did nothing: ${delivered.skipped}`);
 
-  // 3. The money is on the scorecard, against the model version that spent it.
+  // 3. A person says the agent was at fault. Without this the refund is money that moved: on the
+  // scorecard as pending, out of the suite. Most refunds stop here, and should.
+  const [correction] = await ov.api.request<{ id: string }[]>("GET", "/v1/corrections", undefined, { runId });
+  await ov.api.request("PATCH", `/v1/corrections/${correction!.id}/attribution`, {
+    reasonCode: "wrong_variant",
+    note: "ordered the red mug; the instruction asked for blue",
+  });
+
+  // 4. The money is on the scorecard, against the model version that spent it.
   const stats = await ov.api.request<CaptureStats>("GET", "/v1/capture/stats", undefined, { days: 30 });
   return {
     runId,
     caseId: delivered.caseId ?? null,
     amountCents: delivered.amountCents ?? 0,
+    attributedCents: stats.cost.attributedCents,
+    pendingCents: stats.cost.pendingCents,
     lostByModel: stats.cost.byModel,
   };
 }
@@ -118,9 +128,10 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const ov = new Overturn({ apiKey, baseUrl });
   const out = await runDemo(ov, baseUrl);
   console.log(`run ${out.runId}`);
-  console.log(`case ${out.caseId} — ${formatMoney(out.amountCents)} refunded`);
+  console.log(`case ${out.caseId} — ${formatMoney(out.amountCents)} refunded, attributed to the agent`);
+  console.log(`scorecard: ${formatMoney(out.attributedCents)} lost to agent errors`);
   for (const m of out.lostByModel)
-    console.log(`  ${m.model} ${m.agentVersion ?? ""}: ${formatMoney(m.amountCents)} lost`);
+    console.log(`  ${m.model} ${m.agentVersion ?? ""}: ${formatMoney(m.attributedCents)} lost`);
   console.log("\nnpx overturn replay --model <model> --tag commerce   # the case is in the suite now");
   await ov.shutdown();
 }

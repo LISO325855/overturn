@@ -15,6 +15,7 @@ export type CommerceSource = (typeof COMMERCE_SOURCES)[number];
 
 /** The commerce pack: why a purchase was refunded, disputed or cancelled. */
 export const COMMERCE_REASON_CODES = [
+  { code: "unattributed", label: "Not attributed yet" },
   { code: "wrong_item", label: "Wrong item" },
   { code: "wrong_variant", label: "Wrong size / variant" },
   { code: "wrong_quantity", label: "Wrong quantity" },
@@ -301,29 +302,28 @@ export function decisionAsAnswer(d: PurchaseDecision, currency = "usd"): Capture
 
 const VALID_CODES: ReadonlySet<string> = new Set<string>(COMMERCE_REASON_CODES.map((c) => c.code));
 
-/** Stripe's refund and dispute reasons, in the pack's vocabulary. */
+/**
+ * A provider's reason code is an accounting category, not a human saying the agent was wrong.
+ * "requested_by_customer" is every changed mind, bad fit and damaged box; "insufficient_funds" is
+ * a card. Mapping those onto agent fault would fill the corpus with tests for things the agent did
+ * correctly, and the gate would block releases over them — so only the few reasons that state a
+ * fact the provider actually knows get a code, and everything else waits for a person.
+ *
+ * Nothing here is ever an agent error on the provider's say-so. Even a duplicate charge can be a
+ * payment retry rather than the agent buying twice, so it lands as a fact to be attributed, and
+ * the codes that are never the agent's doing are excluded from the suite outright.
+ */
 const STRIPE_REASONS: Record<string, string> = {
-  duplicate: "duplicate_order",
   fraudulent: "fraudulent",
-  requested_by_customer: "should_not_have_bought",
+  unrecognized: "fraudulent",
   product_not_received: "late_or_undeliverable",
-  product_unacceptable: "wrong_item",
-  unrecognized: "not_authorised",
-  subscription_canceled: "should_not_have_bought",
-  incorrect_account_details: "not_authorised",
-  insufficient_funds: "out_of_policy",
-  expired_uncaptured_charge: "should_not_have_bought",
+  duplicate: "duplicate_order",
 };
 
 const CANCEL_REASONS: Record<string, string> = {
   out_of_stock: "late_or_undeliverable",
   unavailable: "late_or_undeliverable",
-  price_changed: "overpaid",
-  wrong_item: "wrong_item",
-  wrong_address: "not_authorised",
   duplicate: "duplicate_order",
-  customer_request: "should_not_have_bought",
-  rejected: "out_of_policy",
 };
 
 /**
@@ -418,8 +418,9 @@ export function correctionFromStripeEvent(event: StripeEventLike): CommerceCorre
       ? str(obj((data.refunds as { data: unknown[] }).data.at(-1))?.reason)
       : null);
   const mapped = providerReason ? STRIPE_REASONS[providerReason] : undefined;
-  const reasonCode =
-    meta.reasonCode ?? mapped ?? (isDispute ? "fraudulent" : partial ? "overpaid" : "should_not_have_bought");
+  // meta.reasonCode is the integrator attributing it themselves at refund time; otherwise the
+  // provider's fact if it stated one, and otherwise nobody has said why yet.
+  const reasonCode = meta.reasonCode ?? mapped ?? "unattributed";
 
   const corrected: PurchaseDecision = meta.corrected ?? { action: "decline", items: [] };
   const currency = (str(data.currency) ?? "usd").toLowerCase();
@@ -483,7 +484,7 @@ export function correctionFromOrderEvent(
     first(data, ["reason", "cancellation_reason", "cancelReason", "code", "message", "error_message"]),
   );
   const key = providerReason?.toLowerCase().replace(/[\s-]+/g, "_") ?? "";
-  const reasonCode = meta.reasonCode ?? CANCEL_REASONS[key] ?? "late_or_undeliverable";
+  const reasonCode = meta.reasonCode ?? CANCEL_REASONS[key] ?? "unattributed";
 
   const corrected: PurchaseDecision = meta.corrected ?? { action: "decline", items: [] };
   const bought = linesFrom(first(data, ["items", "products", "line_items", "lineItems"]));

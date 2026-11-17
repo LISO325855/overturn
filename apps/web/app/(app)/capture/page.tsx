@@ -67,8 +67,13 @@ export default function CapturePage() {
         ``,
         `Sent untouched: ${pct(s.untouchedRate)} (${s.untouched} of ${s.captures})`,
         `Fixes kept: ${s.edited}`,
-        ...(s.cost.amountCents > 0
-          ? [`Cost of those fixes: ${formatMoney(s.cost.amountCents, s.cost.currency)}`]
+        ...(s.cost.attributedCents > 0
+          ? [`Lost to agent errors: ${formatMoney(s.cost.attributedCents, s.cost.currency)}`]
+          : []),
+        ...(s.cost.pendingCents > 0
+          ? [
+              `Refunds awaiting attribution: ${formatMoney(s.cost.pendingCents, s.cost.currency)} (${s.cost.pending})`,
+            ]
           : []),
         `Reviewers capturing: ${s.experts}`,
         ``,
@@ -217,13 +222,20 @@ export default function CapturePage() {
         </Card>
       </div>
 
-      {s && s.cost.amountCents > 0 ? (
+      {s && (s.cost.attributedCents > 0 || s.cost.pendingCents > 0) ? (
         <Card>
           <CardHeader>
             <CardDescription>Dollars lost to agent errors, by model version</CardDescription>
             <CardTitle className="font-mono text-3xl font-normal tabular-nums" data-testid="cost-total">
-              {formatMoney(s.cost.amountCents, s.cost.currency)}
+              {formatMoney(s.cost.attributedCents, s.cost.currency)}
             </CardTitle>
+            {s.cost.pendingCents > 0 ? (
+              <p className="text-xs text-muted-foreground" data-testid="cost-pending">
+                {formatMoney(s.cost.pendingCents, s.cost.currency)} across {s.cost.pending} refund
+                {s.cost.pending === 1 ? "" : "s"} nobody has attributed yet — not counted above, and not
+                replayed.
+              </p>
+            ) : null}
           </CardHeader>
           <CardContent className="p-0">
             <Table>
@@ -233,7 +245,8 @@ export default function CapturePage() {
                   <TH>Prompt</TH>
                   <TH className="text-right">Captured</TH>
                   <TH className="text-right">Wrong</TH>
-                  <TH className="text-right">Lost</TH>
+                  <TH className="text-right">Refunded</TH>
+                  <TH className="text-right">Agent's fault</TH>
                 </TR>
               </THead>
               <TBody>
@@ -245,8 +258,11 @@ export default function CapturePage() {
                       <TD className="font-mono text-xs text-muted-foreground">{m.agentVersion ?? "—"}</TD>
                       <TD className="text-right tabular-nums">{m.captures}</TD>
                       <TD className="text-right tabular-nums">{m.edited}</TD>
-                      <TD className="text-right tabular-nums">
+                      <TD className="text-right tabular-nums text-muted-foreground">
                         {formatMoney(m.amountCents, s.cost.currency)}
+                      </TD>
+                      <TD className="text-right tabular-nums">
+                        {formatMoney(m.attributedCents, s.cost.currency)}
                       </TD>
                     </TR>
                   ))}
@@ -254,7 +270,8 @@ export default function CapturePage() {
             </Table>
             <p className="px-4 py-2 text-xs text-muted-foreground">
               Refunds, disputes and cancellations the commerce pack captured, against the model version that
-              made the purchase. Every one of them is a case the gate replays before you ship.
+              made the purchase. Most refunds are not agent errors, so only the ones a person has attributed
+              to the agent count in the headline and get replayed by the gate.
             </p>
           </CardContent>
         </Card>

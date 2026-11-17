@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import {
   type Correction,
+  type CorrectionAttribute,
   type CorrectionCreate,
   type CorrectionResult,
   caseInputHash,
@@ -102,6 +103,47 @@ export class CorrectionsService {
       .orderBy(desc(corrections.createdAt))
       .limit(q.limit);
     return rows.map(serializeCorrection);
+  }
+
+  /**
+   * A person says who was at fault for a captured refund, which is the step a webhook cannot do.
+   * The reason goes on the correction, and the case it froze joins the suite — or stays out of it,
+   * when the reason is one the agent could not have decided differently.
+   */
+  async attribute(
+    projectId: string,
+    id: string,
+    input: Omit<CorrectionAttribute, "actor"> & { actor: string | null },
+  ) {
+    const [corr] = await this.db
+      .select()
+      .from(corrections)
+      .where(and(eq(corrections.projectId, projectId), eq(corrections.id, id)))
+      .limit(1);
+    if (!corr) throw new NotFoundException("No such correction");
+
+    const [updated] = await this.db
+      .update(corrections)
+      .set({ reasonCode: input.reasonCode, note: input.note, actor: input.actor ?? corr.actor })
+      .where(eq(corrections.id, id))
+      .returning();
+
+    const [c] = await this.db
+      .select({ id: cases.id, status: cases.status })
+      .from(cases)
+      .where(and(eq(cases.projectId, projectId), eq(cases.correctionId, id)))
+      .limit(1);
+    if (c) {
+      const excluded = SUITE_EXCLUDED_REASON_CODES.includes(input.reasonCode);
+      // A human who suppressed a case meant it; attribution does not undo that.
+      if (c.status !== "suppressed") {
+        await this.db
+          .update(cases)
+          .set({ status: excluded ? "archived" : "active" })
+          .where(eq(cases.id, c.id));
+      }
+    }
+    return serializeCorrection(updated!);
   }
 
   /** Records a correction and freezes a case from it, in one transaction. */

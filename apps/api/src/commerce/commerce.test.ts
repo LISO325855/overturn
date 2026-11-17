@@ -154,7 +154,9 @@ describe("POST /v1/commerce/webhooks", () => {
     const [only] = corr.body as unknown as Correction[];
     expect(only).toMatchObject({
       kind: "edit",
-      reasonCode: "should_not_have_bought",
+      // Stripe says "requested_by_customer", which is every changed mind as well as every agent
+      // mistake. Nobody has said the agent was wrong, so nobody is saying it here either.
+      reasonCode: "unattributed",
       amountCents: 6000,
       currency: "usd",
       source: "capture",
@@ -166,6 +168,51 @@ describe("POST /v1/commerce/webhooks", () => {
     expect(kase.body.scorerConfig).toMatchObject({ refunded: ["MUG-R"] });
     expect(kase.body.expected).toMatchObject({ action: "buy", items: [{ sku: "MUG-B", quantity: 2 }] });
     expect(kase.body.frozenInput).toBeTruthy();
+    // Captured, costed, replayable — but out of the suite until a person attributes it.
+    expect(kase.body.status).toBe("archived");
+  });
+
+  it("joins the suite when a person attributes the refund to the agent", async () => {
+    // Its own run and its own corrected sku: the same fix on the same input is one case, merged.
+    const attrRun = "01935000-0000-7000-8000-00000000a003";
+    await recordPurchase({ externalId: "pi_attr_1", runId: attrRun, sku: "MUG-R" });
+    const body = stripeBody(
+      { id: "re_attr_1" },
+      { overturn_run_id: attrRun, overturn_corrected_sku: "MUG-TEAL" },
+    );
+    const res = await post(`/v1/commerce/webhooks/stripe/${ctx.projectId}`, body, stripeHeaders(body));
+    const caseId = (res.body as { caseId: string }).caseId;
+    const [corr] = (await api<Correction>(ctx, "GET", `/v1/corrections?runId=${attrRun}`))
+      .body as unknown as Correction[];
+
+    const attributed = await api<Correction>(ctx, "PATCH", `/v1/corrections/${corr!.id}/attribution`, {
+      reasonCode: "wrong_variant",
+      note: "ordered the red one; the thread asked for blue",
+    });
+    expect(attributed.body).toMatchObject({
+      reasonCode: "wrong_variant",
+      note: "ordered the red one; the thread asked for blue",
+    });
+    expect((await api<Case>(ctx, "GET", `/v1/cases/${caseId}`)).body.status).toBe("active");
+  });
+
+  it("stays out of the suite when the person says it was not the agent", async () => {
+    const lateRun = "01935000-0000-7000-8000-00000000a004";
+    await recordPurchase({ externalId: "pi_attr_2", runId: lateRun, sku: "MUG-R" });
+    const body = stripeBody(
+      { id: "re_attr_2" },
+      { overturn_run_id: lateRun, overturn_corrected_sku: "MUG-GREY" },
+    );
+    const res = await post(`/v1/commerce/webhooks/stripe/${ctx.projectId}`, body, stripeHeaders(body));
+    const caseId = (res.body as { caseId: string }).caseId;
+    const [corr] = (await api<Correction>(ctx, "GET", `/v1/corrections?runId=${lateRun}`))
+      .body as unknown as Correction[];
+
+    await api<Correction>(ctx, "PATCH", `/v1/corrections/${corr!.id}/attribution`, {
+      reasonCode: "late_or_undeliverable",
+      note: "carrier lost it",
+    });
+    expect((await api<Case>(ctx, "GET", `/v1/cases/${caseId}`)).body.status).toBe("archived");
   });
 
   it("ignores a retry of the same event", async () => {
