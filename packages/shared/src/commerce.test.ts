@@ -24,6 +24,14 @@ describe("purchaseDecisionFrom", () => {
     expect(purchaseDecisionFrom({ tool_calls: [] })).toBeNull();
   });
 
+  it("does not read a payment status as the agent declining", () => {
+    // "rejected" is what a processor says, not what the agent chose.
+    expect(purchaseDecisionFrom({ status: "rejected", items: [{ sku: "A-1" }] })?.action).toBe("buy");
+    expect(purchaseDecisionFrom({ status: "nonexistent" })).toBeNull();
+    expect(purchaseDecisionFrom({ action: "declined" })?.action).toBe("decline");
+    expect(purchaseDecisionFrom({ action: "no_purchase" })?.action).toBe("decline");
+  });
+
   it("does not read a decline out of prose that never mentions the purchase", () => {
     expect(purchaseDecisionFrom("Aborted: the catalogue API timed out.")).toBeNull();
     expect(purchaseDecisionFrom("I'll ask the user which colour they prefer.")).toBeNull();

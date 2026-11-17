@@ -82,12 +82,32 @@ export interface CommerceCorrection {
 // ---------- parsing ----------
 
 /**
- * A structured field (`action`, `status`, `decision`) is the agent saying what it did, so a
- * bare word is enough. Free prose is not: "aborted" or "I'll ask the user" can be about
- * anything the agent did, and reading those as a decline passes a release that never
- * re-decided. So prose has to name the purchase it is turning down.
+ * A structured field (`action`, `status`, `decision`) names what the agent chose, so the whole
+ * word has to be one of these: a prefix match would read a payment's `status: "rejected"` as the
+ * agent declining, and `"nonexistent"` as `"none"`. Free prose is looser still — "aborted" or
+ * "I'll ask the user" can be about anything — so prose has to name the purchase it turns down.
+ * Either way a false decline is the dangerous direction: it passes a release that never re-decided.
  */
-const DECLINE_ACTION_RE = /^(declin|refus|reject|no[_\s-]?(?:purchase|buy|order)|skip|abort|none|hold)/i;
+const DECLINE_ACTIONS = new Set([
+  "decline",
+  "declined",
+  "declines",
+  "no_purchase",
+  "no-purchase",
+  "no purchase",
+  "nopurchase",
+  "no_buy",
+  "no-buy",
+  "no_order",
+  "no-order",
+  "skip",
+  "skipped",
+  "abort",
+  "aborted",
+  "none",
+  "hold",
+  "held",
+]);
 const DECLINE_PROSE_RE =
   /\b((?:declin\w*|refus\w*|abort\w*|held? off|hold off|holding off|skipp?\w*)\s+(?:\w+\s+){0,4}?(?:buy|buying|order|ordering|purchas\w*|checkout|cart)|(?:will not|won'?t|do not|don'?t|cannot|can'?t|should not|shouldn'?t|did not|didn'?t|am not|'?m not)\s+(?:\w+\s+){0,3}?(?:buy|buying|order|ordering|purchas\w*|checkout)|not\s+(?:\w+\s+){0,3}?(?:buy|buying|order|ordering|purchas\w*)|no purchase|ask the user (?:\w+\s+){0,4}?(?:buy|order|purchas\w*|confirm))/i;
 const BUY_TOOL_RE = /(buy|order|purchase|checkout|cart_add|add_to_cart|place_order|pay)/i;
@@ -210,7 +230,7 @@ export function purchaseDecisionFrom(value: unknown): PurchaseDecision | null {
     o.purchased === false;
   const reason = str(first(o, ["reason", "why", "explanation", "reply"]));
 
-  if (declinedFlag || (action && DECLINE_ACTION_RE.test(action))) {
+  if (declinedFlag || (action && DECLINE_ACTIONS.has(action))) {
     return { action: "decline", items: [], ...(reason ? { reason } : {}) };
   }
 
