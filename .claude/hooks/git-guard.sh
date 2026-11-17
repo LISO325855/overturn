@@ -40,9 +40,20 @@ MSG
       exit 2
       ;;
     git\ merge*|gh\ pr\ merge*)
-      # CLAUDE.md: never merge your own PR. A local merge into main is the same act.
-      if printf '%s' "$seg" | grep -Eq '^gh pr merge|^git merge .*(origin/)?main'; then
+      # CLAUDE.md: never merge your own PR. What that forbids is landing work ON main.
+      #
+      # Merging origin/main INTO a feature branch is the opposite act, and with force-push and
+      # rebase both off the table it is the only way to take a conflicted branch forward. An
+      # earlier version of this rule matched "main" anywhere in the command and blocked that too,
+      # which would have left every conflicted agent branch stuck.
+      branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+      if printf '%s' "$seg" | grep -Eq '^gh pr merge'; then
         echo "BLOCKED: never merge your own PR (CLAUDE.md). Open it and hand it over; Shireen merges." >&2
+        exit 2
+      fi
+      if [ "$branch" = "main" ] && printf '%s' "$seg" | grep -Eq '^git +merge'; then
+        echo "BLOCKED: that merges a branch into main, which is Shireen's to do (CLAUDE.md)." >&2
+        echo "To take your branch forward instead: switch to it and merge origin/main into it." >&2
         exit 2
       fi
       ;;
