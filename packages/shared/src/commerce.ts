@@ -81,8 +81,15 @@ export interface CommerceCorrection {
 
 // ---------- parsing ----------
 
-const DECLINE_RE =
-  /\b(declin|(?:will not|won'?t|do not|don'?t|cannot|can'?t|should not|shouldn'?t|did not|didn'?t)\s+(?:\w+\s+){0,3}?(?:buy|order|purchas|checkout)|not\s+(?:\w+\s+){0,3}?(?:buy|buying|order|ordering|purchas)|no purchase|skip(?:ped|ping)? the (?:purchase|order)|hold off|ask the user|refus|abort)/i;
+/**
+ * A structured field (`action`, `status`, `decision`) is the agent saying what it did, so a
+ * bare word is enough. Free prose is not: "aborted" or "I'll ask the user" can be about
+ * anything the agent did, and reading those as a decline passes a release that never
+ * re-decided. So prose has to name the purchase it is turning down.
+ */
+const DECLINE_ACTION_RE = /^(declin|refus|reject|no[_\s-]?(?:purchase|buy|order)|skip|abort|none|hold)/i;
+const DECLINE_PROSE_RE =
+  /\b((?:declin\w*|refus\w*|abort\w*|held? off|hold off|holding off|skipp?\w*)\s+(?:\w+\s+){0,4}?(?:buy|buying|order|ordering|purchas\w*|checkout|cart)|(?:will not|won'?t|do not|don'?t|cannot|can'?t|should not|shouldn'?t|did not|didn'?t|am not|'?m not)\s+(?:\w+\s+){0,3}?(?:buy|buying|order|ordering|purchas\w*|checkout)|not\s+(?:\w+\s+){0,3}?(?:buy|buying|order|ordering|purchas\w*)|no purchase|ask the user (?:\w+\s+){0,4}?(?:buy|order|purchas\w*|confirm))/i;
 const BUY_TOOL_RE = /(buy|order|purchase|checkout|cart_add|add_to_cart|place_order|pay)/i;
 
 function str(v: unknown): string | null {
@@ -171,7 +178,7 @@ export function purchaseDecisionFrom(value: unknown): PurchaseDecision | null {
   if (value === null || value === undefined) return null;
 
   if (typeof value === "string") {
-    return DECLINE_RE.test(value)
+    return DECLINE_PROSE_RE.test(value)
       ? { action: "decline", items: [], reason: value.trim().slice(0, 500) }
       : null;
   }
@@ -190,7 +197,8 @@ export function purchaseDecisionFrom(value: unknown): PurchaseDecision | null {
       const items = linesFrom(first(args, ["items", "line_items", "lineItems", "lines"]) ?? args);
       return { action: "buy", items };
     }
-    return calls.length > 0 ? { action: "decline", items: [] } : null;
+    // Calling search_catalogue and stopping is not a decision to decline; it is no decision.
+    return null;
   }
 
   const action = str(first(o, ["action", "decision", "status"]))?.toLowerCase();
@@ -202,14 +210,14 @@ export function purchaseDecisionFrom(value: unknown): PurchaseDecision | null {
     o.purchased === false;
   const reason = str(first(o, ["reason", "why", "explanation", "reply"]));
 
-  if (declinedFlag || (action && DECLINE_RE.test(action))) {
+  if (declinedFlag || (action && DECLINE_ACTION_RE.test(action))) {
     return { action: "decline", items: [], ...(reason ? { reason } : {}) };
   }
 
   const items = linesFrom(first(o, ["items", "line_items", "lineItems", "lines", "products"]) ?? o);
   if (items.length > 0) return { action: "buy", items, ...(reason ? { reason } : {}) };
   if (action === "buy" || action === "purchase" || action === "order") return { action: "buy", items: [] };
-  if (reason && DECLINE_RE.test(reason)) return { action: "decline", items: [], reason };
+  if (reason && DECLINE_PROSE_RE.test(reason)) return { action: "decline", items: [], reason };
   return null;
 }
 
