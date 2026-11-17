@@ -176,7 +176,7 @@ describe("correctionFromStripeEvent", () => {
     },
   });
 
-  it("maps a full refund to a decline correction with the money on it", () => {
+  it("captures a full refund with the money on it, blaming nobody", () => {
     const c = correctionFromStripeEvent(charge());
     expect(c).toMatchObject({
       source: "stripe",
@@ -185,7 +185,8 @@ describe("correctionFromStripeEvent", () => {
       runId: "01924f3f-0000-7000-8000-000000000001",
       amountCents: 4999,
       currency: "usd",
-      reasonCode: "should_not_have_bought",
+      // requested_by_customer is a changed mind as often as an agent mistake; it is not evidence.
+      reasonCode: "unattributed",
       partial: false,
       corrected: { action: "decline", items: [] },
     });
@@ -193,9 +194,17 @@ describe("correctionFromStripeEvent", () => {
     expect(c?.note).toContain("$49.99");
   });
 
-  it("maps a partial refund to overpaid and marks it partial", () => {
+  it("marks a partial refund partial without calling it overpaying", () => {
     const c = correctionFromStripeEvent(charge({ amount_refunded: 1000, refunds: { data: [] } }));
-    expect(c).toMatchObject({ amountCents: 1000, partial: true, reasonCode: "overpaid" });
+    expect(c).toMatchObject({ amountCents: 1000, partial: true, reasonCode: "unattributed" });
+  });
+
+  it("leaves a provider reason that says nothing about fault unattributed", () => {
+    for (const reason of ["requested_by_customer", "insufficient_funds", "subscription_canceled"]) {
+      expect(correctionFromStripeEvent(charge({ refunds: { data: [{ reason }] } }))?.reasonCode).toBe(
+        "unattributed",
+      );
+    }
   });
 
   it("uses the provider's reason and the agent's corrected sku when they are given", () => {
@@ -216,7 +225,7 @@ describe("correctionFromStripeEvent", () => {
     const override = correctionFromStripeEvent(charge({}, { overturn_reason_code: "out_of_policy" }));
     expect(override?.reasonCode).toBe("out_of_policy");
     expect(correctionFromStripeEvent(charge({}, { overturn_reason_code: "not_a_code" }))?.reasonCode).toBe(
-      "should_not_have_bought",
+      "unattributed",
     );
   });
 

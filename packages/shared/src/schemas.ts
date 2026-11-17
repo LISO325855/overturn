@@ -442,6 +442,17 @@ export const correctionSchema = z.object({
 });
 export type Correction = z.infer<typeof correctionSchema>;
 
+/**
+ * A person saying who was at fault for a captured refund. Until this lands, a commerce correction
+ * is a record of money, not a regression test: the case stays out of the suite and the gate.
+ */
+export const correctionAttributeSchema = z.object({
+  reasonCode: z.string().min(1).max(100),
+  note: z.string().min(1).max(2000),
+  actor: z.string().max(200).optional(),
+});
+export type CorrectionAttribute = z.infer<typeof correctionAttributeSchema>;
+
 export const correctionListQuerySchema = z.object({
   runId: uuidSchema.optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
@@ -736,7 +747,13 @@ export const captureStatsSchema = z.object({
    * corrections that carried money count, so a team that never sets an amount sees zeros.
    */
   cost: z.object({
+    /** Every refund captured, attributed or not. Money that moved, not money the agent lost. */
     amountCents: z.number().int(),
+    /** The headline: refunds a human has attributed to the agent. The rest is not yet evidence. */
+    attributedCents: z.number().int(),
+    /** Captured, waiting for someone to say whether the agent was at fault. */
+    pendingCents: z.number().int(),
+    pending: z.number().int(),
     currency: z.string(),
     priced: z.number().int(),
     /** Dollars lost per model version: the headline of the commerce scorecard. */
@@ -747,6 +764,7 @@ export const captureStatsSchema = z.object({
         captures: z.number().int(),
         edited: z.number().int(),
         amountCents: z.number().int(),
+        attributedCents: z.number().int(),
       }),
     ),
   }),
