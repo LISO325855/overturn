@@ -1,12 +1,21 @@
 # The PMF survey — written before the answer is known
 
-Date: **Tuesday 19 January 2027.** Written 16 November 2026. The point of writing this now is
-that the threshold is set before there is an answer to be disappointed by. If the date moves
-because partners onboarded later, move the date and change nothing else.
+**Runs on Tuesday 19 January 2027, or earlier the moment eight people qualify.** Written
+16 November 2026, before there is an answer to be disappointed by.
 
-Why that date: partners need roughly four weeks of ordinary use before the question means
-anything, and the two weeks before 19 January are the first full working weeks of the year.
-December is holidays and will not tell us anything.
+The date is a backstop, not a judgement about when anyone onboarded — nobody has to remember
+partner start dates for this to fire at the right time. The data decides:
+
+- **Whenever `pnpm pmf` shows eight or more eligible respondents across all projects, run it then.**
+  Eight is the floor for a result at all (see below), so there is no reason to wait once it is met,
+  and the answer is worth more early than tidy. A check on 15 December exists to ask this question
+  once before the backstop.
+- **Otherwise it runs on 19 January regardless**, and if fewer than eight qualify by then, that is
+  the finding. Do not slip the date to go looking for respondents.
+
+Why 19 January as the backstop: four weeks of ordinary use is the minimum for the question to mean
+anything, and the two weeks before it are the first full working weeks of the year. December is
+holidays and will not tell us anything.
 
 ## Who gets asked
 
@@ -69,6 +78,9 @@ with it is the expected outcome and not a reason to change it.
 
 ## Mechanics
 
-A scheduled task fires on the date and runs this document: it lists the eligible respondents with
-`pnpm pmf`, drafts the email for Shireen to send, and reports against the rules above. If that task
-has been deleted, the date still stands — run it by hand.
+Two scheduled tasks. One on **15 December 2026** asks whether eight people already qualify and, if
+they do, runs the survey early. One on **19 January 2027** runs it regardless. Both list the
+eligible respondents with `pnpm pmf`, draft the email for Shireen to send, and report against the
+rules above. Neither sends anything itself.
+
+If the tasks have been deleted, the dates still stand — run it by hand.

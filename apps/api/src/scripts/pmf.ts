@@ -22,8 +22,22 @@ import { createDb } from "../db/client";
 import { cases, corrections, projects, replayJobs } from "../db/schema";
 import { loadDotEnv } from "../env";
 
-/** Below this, the corpus is not a switching cost. A guess until a customer proves otherwise. */
-export const CORPUS_FLOOR = 200;
+/**
+ * Below this the corpus is not a switching cost, and the number has to come from somewhere.
+ *
+ * A correction is a minute or two of a senior reviewer's attention — reading the agent's output,
+ * fixing it, saying why. Two hundred of them is most of a working day of someone expensive, spread
+ * over months and impossible to recover, because the cases encode judgements nobody wrote down
+ * anywhere else. A competitor can copy the product in a weekend; they cannot hand a customer back
+ * their own six months of corrections. That is the whole argument for this number, and it is the
+ * argument to check against a real customer rather than the number itself.
+ *
+ * It is also the point where a replay suite starts catching things: under about fifty cases a
+ * regression run mostly passes and tells you nothing.
+ *
+ * Override with OVERTURN_CORPUS_FLOOR once a customer has shown us where the line actually is.
+ */
+export const CORPUS_FLOOR = Number(process.env.OVERTURN_CORPUS_FLOOR ?? 200);
 /** A gate has to survive a month of someone's pull requests before it counts as production. */
 export const PRODUCTION_DAYS = 30;
 /** And it has to have run recently, or it is a gate somebody quietly removed. */
