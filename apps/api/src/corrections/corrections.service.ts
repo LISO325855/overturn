@@ -34,6 +34,8 @@ export function serializeCorrection(r: CorrectionRow): Correction {
     correctedOutput: r.correctedOutput,
     note: r.note,
     reasonCode: r.reasonCode,
+    amountCents: r.amountCents,
+    currency: r.currency,
     actor: r.actor,
     source: r.source,
     createdAt: r.createdAt.toISOString(),
@@ -145,6 +147,8 @@ export class CorrectionsService {
             note: input.note ?? null,
             reasonCode: input.reasonCode ?? null,
             secondsToSend: input.secondsToSend ?? null,
+            amountCents: input.amountCents ?? null,
+            currency: input.currency ?? null,
             actor: input.actor ?? null,
             source: input.source,
           })

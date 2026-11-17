@@ -21,7 +21,12 @@ export async function createApp(config: AppConfig): Promise<NestFastifyApplicati
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.forRoot(config),
     new FastifyAdapter({ bodyLimit: 32 * 1024 * 1024, trustProxy: true }),
-    { logger: LEVELS[config.LOG_LEVEL] },
+    {
+      logger: LEVELS[config.LOG_LEVEL],
+      // Provider webhooks are signed over the bytes they sent, so the raw body has to survive
+      // parsing: an HMAC over re-serialized JSON would never match (apps/api/src/commerce).
+      rawBody: true,
+    },
   );
   await app.register(cors, {
     origin: true,

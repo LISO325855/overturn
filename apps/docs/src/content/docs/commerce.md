@@ -1,0 +1,156 @@
+---
+title: "Commerce pack: refunds as regression tests"
+description: A refund is a human correcting an agent's purchase. Capture it from Stripe, Rye or Zinc, replay the decision, and block the release that would repeat it.
+---
+
+A buying agent's mistakes have a receipt. When someone refunds an order, disputes a charge or
+cancels a cart, a human has said *the agent bought the wrong thing* and the money says what that
+was worth. The commerce pack turns those events into the same correction records a Zendesk edit
+makes, so they replay, gate a release and show up on the scorecard with nothing commerce-specific
+downstream.
+
+Three pieces: **capture** the event, **replay** the decision, **gate** the release.
+
+## 1. Record the purchase
+
+The pack needs what the agent saw. Record the decision with the snapshot, and put the ids it
+returns on the payment so the refund can find its way back:
+
+```ts
+import { Overturn } from "@overturn-ai/sdk";
+const ov = new Overturn({ apiKey: process.env.OVERTURN_API_KEY });
+
+const { runId, metadata } = await ov.recordPurchase({
+  externalId: order.id,
+  agent: "purchasing-agent",
+  snapshot: {
+    instruction: "Reorder the blue mugs, nothing over $30 each",
+    cart: [{ sku: "MUG-B", title: "Blue mug", quantity: 2, unitPriceCents: 1200 }],
+    catalogue,                       // what the agent could choose from
+    budgetCents: 5000,
+  },
+  decision: { action: "buy", items: [{ sku: "MUG-R", quantity: 2 }] },
+  model: "openai/gpt-4.1-mini",
+  agentVersion: "buyer-2.1",
+});
+
+await stripe.paymentIntents.create({ ...params, metadata }); // overturn_run_id, overturn_external_id
+```
+
+`metadata` is three strings. Stripe, Rye and Zinc all hand metadata back on their events, which is
+how a refund two weeks later finds the run. Without it the pack falls back to matching the payment
+intent or order id against the run's `externalId`.
+
+If your agent already records its runs with the SDK you do not need `recordPurchase` — any run
+with a model step and a matching `externalId` works. What the pack will never do is invent a run:
+an event with nothing recorded behind it is answered `200` and counted as unmatched, because a
+case with no snapshot is a case that cannot be replayed.
+
+## 2. Point the provider at the webhook
+
+One endpoint per provider, per project:
+
+```
+POST https://api.overturn.run/v1/commerce/webhooks/stripe/<project-id>
+POST https://api.overturn.run/v1/commerce/webhooks/rye/<project-id>
+POST https://api.overturn.run/v1/commerce/webhooks/zinc/<project-id>
+```
+
+These are the only endpoints in the API with no API key: a refund arrives from Stripe with no
+credentials of yours on it. The signing secret is what authorises the call, so set it first in
+**Settings → Commerce**, or:
+
+```bash
+curl -X PATCH https://api.overturn.run/v1/project \
+  -H "authorization: Bearer $OVERTURN_API_KEY" -H "content-type: application/json" \
+  -d '{"settings":{"commerce":{"stripeWebhookSecret":"whsec_…"}}}'
+```
+
+A read of your settings returns `__set__` in place of a secret, never the secret itself. Writing
+`__set__` back leaves it alone; writing `""` clears it.
+
+| Provider | Header | Signature |
+|---|---|---|
+| Stripe | `Stripe-Signature` | `t=…,v1=…`, HMAC-SHA256 of `<t>.<body>`, 5-minute tolerance |
+| Rye | `X-Rye-Signature` | HMAC-SHA256 of the raw body, hex or base64 |
+| Zinc | `X-Zinc-Signature` | HMAC-SHA256 of the raw body, hex or base64 |
+
+Stripe's scheme is checked exactly, replay window included. **Confirm the Rye and Zinc header
+names against their current docs before you point a live endpoint at one.** Both sign the raw body
+with a shared secret, but the header and the encoding have moved between their API versions, and a
+check against the wrong header fails closed with a 401 — safe, but silent.
+
+Events the pack acts on: `charge.refunded`, `refund.created`, `refund.updated`,
+`charge.dispute.created` and `payment_intent.canceled` from Stripe; any order body from Rye or Zinc
+whose status reads as cancelled, refunded, failed, rejected or returned. Everything else gets a
+`200` and is ignored, so the provider stops retrying. A retry of an event already handled is
+ignored by event id.
+
+### Saying what should have happened
+
+By default a refund means *should not have bought*, and the case passes when the agent declines.
+When you know the right answer, say so in the payment metadata and the case expects that instead:
+
+```ts
+metadata: {
+  ...metadata,
+  overturn_corrected_sku: "MUG-B",        // or overturn_corrected: JSON of a decision
+  overturn_corrected_quantity: "2",
+  overturn_reason_code: "wrong_variant",  // else mapped from the provider's own reason
+}
+```
+
+Reason codes: `wrong_item`, `wrong_variant`, `wrong_quantity`, `overpaid`, `duplicate_order`,
+`should_not_have_bought`, `out_of_policy`, `not_authorised`, `fraudulent`, `late_or_undeliverable`.
+
+## 3. What replay proves
+
+Each event becomes a case scored by `purchase_decision`, re-running the frozen snapshot — the same
+instruction, cart and catalogue — against whatever model or prompt you are about to ship.
+
+It **passes** when the agent declines to buy, or buys what the correction said it should have. It
+**fails** when it buys the refunded item again, buys something nobody sanctioned, gets the quantity
+wrong, or goes over `commerce.maxUnitPriceCents`. Declining always passes: not spending the money
+is never the expensive mistake.
+
+```bash
+npx overturn replay --model openai/gpt-5.1-mini --tag commerce --since 90d
+```
+
+## 4. Gate the release
+
+The gate already fails on regressions. With the commerce pack those regressions carry their price,
+so the check says what shipping would cost:
+
+```
+Gate: red — 2 regressions ($102.50 of past refunds would happen again)
+```
+
+```yaml
+- uses: overturn-ai/overturn/packages/replay-action@main
+  with:
+    api-key: ${{ secrets.OVERTURN_API_KEY }}
+    model: openai/gpt-5.1-mini
+    tag: commerce
+    max-money-at-risk: "5000"   # optional: allow up to $50 of recurrence
+```
+
+The action exposes `money-at-risk` in cents as an output. Leave `max-money-at-risk` unset and any
+regression fails the check, as before.
+
+## 5. The scorecard
+
+`/capture` shows what the mistakes cost, split by the model version that made them, so "this model
+is cheaper per call" meets "and it lost $1,400 in refunds last month". The same numbers come from
+`GET /v1/capture/stats` under `cost`:
+
+```json
+{ "cost": { "amountCents": 140000, "currency": "usd", "priced": 38,
+  "byModel": [ { "model": "gpt-4.1-mini", "agentVersion": "buyer-2.1",
+                 "captures": 220, "edited": 38, "amountCents": 140000 } ] } }
+```
+
+Only corrections that carried money count, so a team that never sets an amount sees zeros rather
+than a guess. Any correction can carry one: `amountCents` and `currency` are ordinary fields on
+`POST /v1/capture` and `POST /v1/corrections`. The commerce pack is the adapter that fills them in
+from a provider event.
