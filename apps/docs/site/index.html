@@ -27,15 +27,29 @@
   body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased;font-optical-sizing:auto}
   a{color:inherit;text-decoration:none}
   code,pre,.mono{font-family:var(--mono)}
-  .wrap{max-width:1280px;margin:0 auto;padding:0 56px;position:relative}
-  /* One continuous pair of rules down the whole page, not a line per section. */
-  .ruled{position:relative}
-  .ruled::before{content:"";position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
-    width:min(1280px,100%);border-left:1px solid var(--line);border-right:1px solid var(--line);
-    pointer-events:none;z-index:0}
-  .ruled>*{position:relative;z-index:1}
-  @media (max-width:1000px){.wrap{padding:0 24px}}
-  @media (max-width:640px){.wrap{padding:0 16px}}
+  /* The page is one hairline-bordered column, inset from the viewport edge, with the paper
+     showing outside it. Sections are panels stacked inside that column and divided by a
+     hairline — never by a change of background. This is the skeleton, not decoration. */
+  .wrap{max-width:1424px;margin:0 auto;padding:0 48px;position:relative}
+  .pagecol{border-left:1px solid var(--line);border-right:1px solid var(--line)}
+  .pagecol .wrap{max-width:none;padding:0 64px}
+  @media (max-width:1000px){.wrap{padding:0 20px}.pagecol .wrap{padding:0 24px}}
+  @media (max-width:640px){.wrap{padding:0 12px}.pagecol .wrap{padding:0 16px}}
+
+  /* A framed plate: the rounded, tinted, bordered box a section's visual sits in. */
+  .frame{border:1px solid var(--line);border-radius:8px;background:#f7f7f4;overflow:hidden}
+
+  /* Centred section header: eyebrow, serif headline, at most two lines of subhead. */
+  .shead{text-align:center;max-width:720px;margin:0 auto 44px}
+  .shead h2{margin:0 auto}
+  .shead .sub{font-size:18px;line-height:1.5;color:var(--muted);margin:18px auto 0;max-width:620px}
+  .shead .eyebrow{margin-bottom:16px}
+  .shead .sheadlink{margin-top:20px;font-size:15px}
+  /* a heading kept for the document outline and screen readers, not shown */
+  .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  /* Sections alternate tone, never colour: #fcfcf9 against the paper is the whole shift. */
+  section.tint{background:#fcfcf9}
+  @media (max-width:640px){.shead{margin-bottom:32px}.shead .sub{font-size:16px}}
   h1,h2,h3{font-weight:400;letter-spacing:-.02em;margin:0}
   h1,h2{font-family:var(--serif);font-weight:400}
   .sor{margin:-6px 0 24px;font-size:17px;font-weight:500;color:var(--fg)}
@@ -228,6 +242,9 @@
   .ask .bub{background:var(--panel);border-radius:14px;padding:12px 18px;font-size:19px}
   .vs{display:grid;grid-template-columns:1fr 1fr;gap:34px;max-width:980px;margin:34px auto 0}
   @media (max-width:800px){.vs{grid-template-columns:1fr}}
+  /* Grid items default to min-width:auto, so the long mono lines pushed the page sideways. */
+  .vs>.col{min-width:0}
+  .vs .line,.vs .line .m{overflow-wrap:anywhere}
   .vs .col h4{font-weight:500;font-size:17px;margin:0;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--line)}
   .vs .col h4 i{width:8px;height:8px;border-radius:2px;background:var(--amber)}
   .vs .col.b h4 i{background:var(--blue)}
@@ -352,8 +369,13 @@
 
   .hero{padding:96px 0 0;display:block;position:relative}
   /* The pixel field sits behind the hero, full-bleed past the ruled column. */
-  .pxfield{position:absolute;top:-96px;left:50%;transform:translateX(-50%);width:100vw;
+  /* Bleeds to the column's inner edge — the hairline column is the frame, not the viewport.
+     A canvas is a replaced element: with width:auto an absolute box takes its intrinsic
+     width and ignores `right`, which feeds back into the next resize. Set width outright. */
+  .pxfield{position:absolute;top:-96px;left:-64px;width:calc(100% + 128px);
     height:calc(100% + 96px);z-index:0;pointer-events:none}
+  @media (max-width:1000px){.pxfield{left:-24px;width:calc(100% + 48px)}}
+  @media (max-width:640px){.pxfield{left:-16px;width:calc(100% + 32px)}}
   .heroCol,.hero .scene{position:relative;z-index:1}
 
   /* A cell you can point at: corner tick goes orange and the cell takes the faintest wash. */
@@ -370,7 +392,9 @@
   .heroCol .sor{font:12px/1 var(--mono);text-transform:uppercase;letter-spacing:-.02em;color:var(--faint);font-weight:400;margin:0 0 8px}
 
   /* The scene sits under the headline as a plate, bounded by rules like everything else. */
-  .hero .scene{height:560px;margin:8px 0 0;width:100%}
+  /* Clipped to the column: the 3D floor is wider than the deck and used to push the page
+     8px sideways on a phone. The panel edge is the frame, so clip to it. */
+  .hero .scene{height:560px;margin:8px 0 0;width:100%;overflow:hidden}
   @media (max-width:1000px){.hero .scene{height:460px}}
 
   /* Numbers read as a ruled strip, not as cards. */
@@ -386,6 +410,36 @@
   section{padding:88px 0 88px;border-top:1px solid var(--line);margin-top:0}
   section.band{border-top:1px solid var(--line);margin-top:0;padding-top:88px}
   .sec-head h2{max-width:20ch}
+
+  /* ---- the correction plate ----
+     The reference puts a framed product plate under each section header. Ours shows the
+     one object the product is actually about: the AI's draft, what the human sent, and
+     the reason. Drawn in markup, not a screenshot, so it stays true when the app changes. */
+  .plate{margin:8px 0 60px}
+  .plate .bar{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);
+    background:#fffdfb;font:11px/1.6 var(--mono);text-transform:uppercase;letter-spacing:-.02em;color:var(--faint)}
+  .plate .bar .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .plate .bar .sp{margin-left:auto;text-transform:none;letter-spacing:0}
+  .plate .pair{display:grid;grid-template-columns:1fr 1fr}
+  .plate .side{padding:22px 24px 24px;min-width:0}
+  .plate .side+.side{border-left:1px solid var(--line);background:#fffdfb}
+  .plate .k{font:11px/1.6 var(--mono);text-transform:uppercase;letter-spacing:-.02em;color:var(--faint);margin-bottom:12px}
+  .plate .side+.side .k{color:var(--accent)}
+  .plate .body{font-size:15px;line-height:1.62;color:#2f2d2a}
+  .plate del{text-decoration:none;background:rgba(217,60,60,.1);color:#9b2f2f;border-radius:3px;padding:0 3px}
+  .plate ins{text-decoration:none;background:rgba(240,74,0,.12);color:#9c3300;border-radius:3px;padding:0 3px}
+  .plate .fields{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px;
+    font:11px/1.9 var(--mono);text-transform:uppercase;letter-spacing:-.02em}
+  .plate .fld{border:1px solid var(--line);border-radius:999px;padding:1px 10px;color:var(--muted);background:var(--paper)}
+  .plate .fld b{font-weight:500;color:var(--fg)}
+  .plate .fld.chg{border-color:rgba(240,74,0,.45);color:#9c3300;background:rgba(240,74,0,.06)}
+  .plate .foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:14px 18px;
+    border-top:1px solid var(--line);font:11px/1.8 var(--mono);text-transform:uppercase;letter-spacing:-.02em;color:var(--faint)}
+  .plate .foot .why{color:var(--fg);text-transform:none;letter-spacing:0;font-size:13px}
+  .plate .foot .out{margin-left:auto;color:var(--accent)}
+  @media (max-width:760px){.plate .pair{grid-template-columns:1fr}
+    .plate .side+.side{border-left:0;border-top:1px solid var(--line)}
+    .plate .foot .out{margin-left:0}}
 
   /* Headline numerals and the big serif want slightly tighter tracking than the body. */
   .stats .n,.big{font-family:var(--serif);letter-spacing:-.035em}
@@ -409,6 +463,7 @@
 </div></nav>
 
 <div class="ruled">
+<div class="wrap"><div class="pagecol">
 <main class="wrap">
 <div class="hero">
   <canvas class="pxfield" aria-hidden="true"></canvas>
@@ -531,9 +586,31 @@
 </section>
 
 <section id="product" class="band">
+  <div class="shead">
+    <div class="eyebrow">How it works</div>
+    <h2>From an agent's fix to a test that runs before every change.</h2>
+    <p class="sub">Four steps, each one a thing your team already does. Nothing new to open, nothing new to remember.</p>
+  </div>
+  <div class="frame plate">
+    <div class="bar"><span class="dot"></span><span>zd:48102 &middot; claims &middot; storm damage</span><span class="sp">agent: claims-reply &middot; gpt-4o-mini &middot; prompt v12</span></div>
+    <div class="pair">
+      <div class="side">
+        <div class="k">AI draft</div>
+        <div class="body">Hi Dana, the storm damage is covered under your HO-3 policy. An adjuster will contact you <del>within 5 business days</del> to schedule the inspection.</div>
+        <div class="fields"><span class="fld">status <b>covered</b></span><span class="fld">reserve <b>$4,000</b></span><span class="fld">deductible <b>$1,000</b></span></div>
+      </div>
+      <div class="side">
+        <div class="k">Sent by the adjuster</div>
+        <div class="body">Hi Dana, the storm damage is covered under your HO-3 policy. An adjuster will contact you <ins>within 2 business days</ins> to schedule the inspection.</div>
+        <div class="fields"><span class="fld">status <b>covered</b></span><span class="fld chg">reserve <b>$6,500</b></span><span class="fld">deductible <b>$1,000</b></span></div>
+      </div>
+    </div>
+    <div class="foot"><span>reason</span><span class="why">Storm claims get a 2-day contact; roof replaced, not repaired.</span><span class="out">&rarr; case #312 &middot; 2 decision fields &middot; in the suite</span></div>
+  </div>
+
   <div class="flow">
     <div>
-      <div class="eyebrow">How it works</div><h2>From an agent's fix<br>to a test that runs before every change.</h2>
+      <h2 class="vh">From an agent's fix to a test that runs before every change.</h2>
       <div class="fsteps" id="fsteps">
         <div class="fstep on" data-i="0"><h3>Record</h3><p>The Zendesk app records the AI draft and the thread the agent saw; or wrap the model client you already have and every prompt, tool call and answer is recorded with a fingerprint.</p></div>
         <div class="fstep" data-i="1"><h3>Correct</h3><p>The agent sends the reply as drafted, or changes it and picks a reason in one click, in the help desk they already use. The case freezes with the AI's draft, the agent's fix, and the reason.</p></div>
@@ -568,11 +645,15 @@
   <details class="how"><summary>How this was measured <span class="ch">⌄</span></summary><p>Timings and costs are from the example agent in the repository (<code>examples/ticket-triage</code>, 30 tickets, 20 corrections) replayed on the hosted app. The "without" column is what the same change costs when the only signal is the next batch of corrections. Run it yourself: <code>pnpm --filter ticket-triage demo</code>.</p></details>
 </section>
 
-<section id="results" class="band">
+<section id="results" class="band tint">
+  <div class="shead">
+    <div class="eyebrow">Replay report</div>
+    <h2>Every fix, run again before the change ships</h2>
+    <p class="sub">What one report said after swapping the model on the example agent.</p>
+  </div>
   <div class="res-grid">
     <div>
-      <div class="eyebrow">Replay report</div><h2>Replay results</h2>
-      <p class="muted" style="margin-top:12px">What one report said after swapping the model on the example agent.</p>
+      <h2 class="vh">Replay results</h2>
       <div class="bigstats">
         <div><div class="n">25</div><div class="l">cases replayed</div></div>
         <div><div class="n" style="color:var(--bad)">2</div><div class="l">regressions</div></div>
@@ -592,8 +673,13 @@
 </section>
 
 <section id="api" class="band">
+  <div class="shead">
+    <div class="eyebrow">The API</div>
+    <h2>Five endpoints, and the SDKs call the same ones</h2>
+    <p class="sub">Record runs, attach corrections, start replays, read the report.</p>
+  </div>
   <div class="ep">
-    <div><div class="eyebrow">The API</div><h2>Five API endpoints</h2><p class="muted" style="margin-top:14px;max-width:460px">Record runs, attach corrections, start replays, read the report. The SDKs and CLI call the same API you can.</p><p style="margin-top:22px"><a class="link" href="/docs/sdk/">API reference →</a></p></div>
+    <div><p><a class="link" href="/docs/sdk/">API reference →</a></p></div>
     <table>
       <tr><td>POST /v1/runs</td><td>a recorded run: prompts, tool calls with their results, the final answer</td></tr>
       <tr><td>POST /v1/corrections</td><td>approve, edit, reject or escalate a run — it becomes a case with the fix attached</td></tr>
@@ -605,7 +691,11 @@
 </section>
 
 <section id="capabilities" class="band">
-  <div class="eyebrow">Capabilities</div><h2 style="margin-bottom:40px">What Overturn handles</h2>
+  <div class="shead">
+    <div class="eyebrow">Capabilities</div>
+    <h2>What Overturn handles</h2>
+    <p class="sub">Capture, scorecard, replay, and a model you own at the end of it.</p>
+  </div>
   <div class="feat">
     <div class="tick"><h4>Capture at the point of fix</h4><p>No one opens another dashboard. The Zendesk app diffs the AI draft against what the expert sent and asks for one line on why; Slack, <code>&lt;CorrectButton&gt;</code> and <code>/v1/capture</code> cover everything else. The fix is recorded with the reason attached.</p></div>
     <div class="tick"><h4>The AI draft scorecard</h4><p>Untouched rate, fixes by reason, time to send: the QA numbers a support lead already reports, for AI drafts, by team and by week. Never a per-agent rate. The correction record and the regression suite come with it.</p></div>
@@ -622,8 +712,12 @@
 </section>
 
 <section id="deployment" class="band dep">
-  <div class="eyebrow">Deployment</div><div class="sec-head"><h2>Deployment options</h2><a class="link" href="/docs/self-hosting/">Self-hosting guide →</a></div>
-  <p class="intro">Every deployment runs the same code. The hosted app is free during the open beta. Self-hosting needs one Postgres with pgvector and the two containers; the SDKs only change a base URL.</p>
+  <div class="shead">
+    <div class="eyebrow">Deployment</div>
+    <h2>Hosted, self-hosted, or air-gapped</h2>
+    <p class="sub">Every deployment runs the same code. Self-hosting needs one Postgres with pgvector and the two containers; the SDKs only change a base URL.</p>
+    <p class="sheadlink"><a class="link" href="/docs/self-hosting/">Self-hosting guide →</a></p>
+  </div>
   <table>
     <tr><td>Hosted</td><td>app.overturn.run. Sign in with email, create a key, send the first run. We run Postgres and the replay workers.</td></tr>
     <tr><td>Self-hosted</td><td><code>docker compose up</code> on any box with Postgres 16. Your recordings never leave your network; model calls go straight to the provider with your keys.</td></tr>
@@ -645,7 +739,11 @@
 </section>
 
 <section id="plans" class="band">
-  <div class="eyebrow">Plans</div><div class="sec-head"><h2>Plans</h2><a class="link" href="/docs/hosted/">What the beta includes →</a></div>
+  <div class="shead">
+    <div class="eyebrow">Plans</div>
+    <h2>Free while we are in beta, free forever if you host it</h2>
+    <p class="sheadlink"><a class="link" href="/docs/hosted/">What the beta includes →</a></p>
+  </div>
   <div class="plans">
     <div class="plan"><h4>Open beta <span>$0 / month</span></h4><p>The hosted app, free while we're in beta. Enough for a team's agents in production.</p><ul><li>Unlimited runs and corrections</li><li>Replays on your own model keys</li><li>30-day raw run retention; cases kept</li><li>Email sign-in, Slack review</li></ul><a class="btn block" href="https://app.overturn.run/login">Start free</a></div>
     <div class="plan"><h4>Self-hosted <span>Free, forever</span></h4><p>Apache-2.0. The same code as the hosted app, on your Postgres.</p><ul><li>One Postgres, two containers</li><li>Recordings never leave your network</li><li>Any retention you set</li><li>Air-gapped replay against local models</li></ul><a class="btn primary block" href="/docs/self-hosting/">Self-hosting guide</a></div>
@@ -655,7 +753,7 @@
 
 <section id="faq" class="band">
   <div class="faq">
-    <div class="eyebrow">FAQ</div><h2>Frequently<br>asked questions</h2>
+    <div class="eyebrow">FAQ</div><h2>Frequently asked<br>questions</h2>
     <div>
       <details><summary><span class="i">01</span>Who is this for?<span class="ch">⌄</span></summary><div class="a">Support and ops teams whose agents review AI-drafted replies before sending: customer support, claims, billing, field service, compliance review. If AI drafts into your Zendesk or Salesforce and nobody can say how often the draft was right, this is for you. Engineers get the same thing as an open-source SDK.</div></details>
       <details><summary><span class="i">02</span>What do I send?<span class="ch">⌄</span></summary><div class="a">From Zendesk, nothing: the app captures the draft, the thread, what was sent and the reason. From code, runs: the input, every prompt and model answer, every tool call with its result, and the final output. OpenTelemetry users send the spans they already have.</div></details>
@@ -682,6 +780,7 @@
   <span>© 2026 · Apache-2.0 · self-host on one Postgres</span>
   <div class="r"><a href="/docs/">Docs</a><a href="https://github.com/overturn-ai/overturn">GitHub</a><a href="/docs/terms/">Terms</a><a href="/docs/privacy/">Privacy</a><a href="https://app.overturn.run/login">Sign in</a></div>
 </div></footer>
+</div></div><!-- /.pagecol -->
 </div><!-- /.ruled -->
 
 <script>
