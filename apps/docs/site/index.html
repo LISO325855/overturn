@@ -12,15 +12,15 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:image" content="https://docs.overturn.run/media/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#fbfaf8;--fg:#14130f;--muted:#6b6861;--faint:#9b978e;--line:#e5e2db;--panel:#f3f1ec;
-    --accent:#ee4111;--ok:#1f9d5f;--bad:#d33c3c;--warn:#c98a12;
+    --bg:#fffaf7;--fg:#101010;--muted:#737373;--faint:#a3a3a3;--line:#ededed;--panel:#f6f1ec;
+    --accent:#f04a00;--ok:#1f9d5f;--bad:#d33c3c;--warn:#c98a12;
     --blue:#3b5bdb;--red:#d9480f;--purple:#7048e8;--amber:#e8960c;
-    --ink:#14130f;--paper:#fbfaf8;
-    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-    --serif:"Instrument Serif",Iowan Old Style,Georgia,serif;
+    --ink:#101010;--paper:#fffaf7;
+    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --serif:"Newsreader",Iowan Old Style,Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -37,9 +37,9 @@
   @media (max-width:1000px){.wrap{padding:0 24px}}
   @media (max-width:640px){.wrap{padding:0 16px}}
   h1,h2,h3{font-weight:400;letter-spacing:-.02em;margin:0}
-  h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:-.015em}
+  h1,h2{font-family:var(--serif);font-weight:400}
   .sor{margin:-6px 0 24px;font-size:17px;font-weight:500;color:var(--fg)}
-  h2{font-size:clamp(32px,3.6vw,50px);line-height:1.04}
+  h2{font-size:clamp(30px,3.4vw,48px);line-height:1.04;letter-spacing:-.035em}
   p{margin:0}
   .muted{color:var(--muted)}
   .arrow{color:var(--accent)}
@@ -48,21 +48,21 @@
   .btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 26px;border-radius:999px;font-size:16px;font-weight:500;border:1px solid var(--line);background:#fff;color:var(--fg);white-space:nowrap;transition:background .15s,border-color .15s}
   .btn:hover{background:var(--panel)}
   .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .btn.primary:hover{background:#d5370c;border-color:#d5370c}
+  .btn.primary:hover{background:#c13701;border-color:#c13701}
   .btn.ink{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .btn.ink:hover{background:#2c2a24}
+  .btn.ink:hover{background:#262626}
   .btn.sm{height:38px;padding:0 18px;font-size:15px}
   .btn.block{width:100%;justify-content:center}
 
   /* announcement */
   .ann{background:var(--ink);color:#f4f2ee;font-size:14px;text-align:center;padding:11px 16px;display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap}
-  .ann .new{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:1px 10px;font:11px/1.6 var(--mono);text-transform:uppercase;letter-spacing:.12em}
+  .ann .new{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:1px 10px;font:11px/1.6 var(--mono);text-transform:uppercase;letter-spacing:-.02em}
   .ann code{color:#fff}
   .ann a{font-weight:500;color:#fff;white-space:nowrap}
   .ann a:hover{color:var(--accent)}
 
   /* nav */
-  nav.top{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);background:rgba(251,250,248,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  nav.top{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);background:rgba(255,250,247,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   nav.top .wrap{height:76px;display:flex;align-items:center;gap:30px}
   .brand{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:500;letter-spacing:-.01em}
   .brand .logo{height:28px;width:auto;display:block}
@@ -76,7 +76,7 @@
   .hero{padding:72px 0 40px;display:grid;grid-template-columns:minmax(0,600px) 1fr;gap:40px;align-items:start}
   @media (max-width:1000px){.hero{grid-template-columns:1fr}}
   .pill{display:inline-flex;align-items:center;border:1px solid #9bd3b5;color:#1d6f45;border-radius:999px;padding:4px 14px;font-size:14px;margin-bottom:34px}
-  h1{font-size:clamp(44px,7vw,104px);line-height:.94;letter-spacing:-.02em;text-wrap:balance}
+  h1{font-size:clamp(42px,6.2vw,92px);line-height:1;letter-spacing:-.04em;text-wrap:balance}
   .lede{font-size:20px;line-height:1.5;color:#3a3a40;margin:30px 0 32px;max-width:620px}
   .lede b{font-weight:500;color:var(--fg)}
   .install{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;height:54px;max-width:460px;margin-bottom:24px;overflow:hidden}
@@ -133,7 +133,7 @@
   .phase.on{opacity:1;transform:none}
 
   /* on this page */
-  .onpage{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:0;position:sticky;top:76px;background:rgba(251,250,248,.92);backdrop-filter:blur(10px);z-index:40}
+  .onpage{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:0;position:sticky;top:76px;background:rgba(255,250,247,.92);backdrop-filter:blur(10px);z-index:40}
   .onpage .wrap{display:flex;gap:28px;height:50px;align-items:center;font-size:15px;overflow-x:auto;white-space:nowrap}
   .onpage .wrap>span{color:var(--muted);padding-right:28px;border-right:1px solid var(--line)}
   .onpage a:hover{color:var(--accent)}
@@ -341,18 +341,33 @@
   /* ---- editorial layer ---- */
   /* Small mono caps in the accent are the page's only decoration; they label a section
      the way a plate caption labels a figure. */
-  .eyebrow{display:block;font:12px/1 var(--mono);text-transform:uppercase;letter-spacing:.16em;color:var(--accent);margin-bottom:18px}
+  /* Mono caps here run TIGHT, not tracked out: -0.025em. Tracking them wide reads as a
+     SaaS kicker; tight reads as a plate caption, which is the whole point. */
+  .eyebrow{display:block;font:12px/1 var(--mono);text-transform:uppercase;letter-spacing:-.025em;color:var(--accent);margin-bottom:18px}
   .heroCol .eyebrow{margin-bottom:30px}
   .sec-head .eyebrow{margin-bottom:12px}
   .sec-head{flex-wrap:wrap}
-  .eyebrow::before{content:"| · "}.eyebrow::after{content:" · |"}
+  .eyebrow::before{content:"| "}.eyebrow::after{content:" |"}
+  .eyebrow::before,.eyebrow::after{opacity:.55}
 
-  .hero{padding:96px 0 0;display:block}
+  .hero{padding:96px 0 0;display:block;position:relative}
+  /* The pixel field sits behind the hero, full-bleed past the ruled column. */
+  .pxfield{position:absolute;top:-96px;left:50%;transform:translateX(-50%);width:100vw;
+    height:calc(100% + 96px);z-index:0;pointer-events:none}
+  .heroCol,.hero .scene{position:relative;z-index:1}
+
+  /* A cell you can point at: corner tick goes orange and the cell takes the faintest wash. */
+  .tick{position:relative;transition:background .16s}
+  .tick::after{content:"";position:absolute;top:10px;right:10px;width:7px;height:7px;
+    border-top:1px solid var(--line);border-right:1px solid var(--line);
+    transition:border-color .16s,transform .16s}
+  .tick:hover{background:rgba(240,74,0,.035)}
+  .tick:hover::after{border-color:var(--accent);transform:translate(1px,-1px)}
   .heroCol{max-width:980px;margin:0 auto;text-align:center}
   .heroCol .lede{font-size:20px;line-height:1.55;color:var(--muted);margin:28px auto 36px;max-width:660px}
   .heroCol .ctas{justify-content:center;margin-bottom:28px}
   .heroCol .install{margin:0 auto 22px}
-  .heroCol .sor{font:12px/1 var(--mono);text-transform:uppercase;letter-spacing:.13em;color:var(--faint);font-weight:400;margin:0 0 8px}
+  .heroCol .sor{font:12px/1 var(--mono);text-transform:uppercase;letter-spacing:-.02em;color:var(--faint);font-weight:400;margin:0 0 8px}
 
   /* The scene sits under the headline as a plate, bounded by rules like everything else. */
   .hero .scene{height:560px;margin:8px 0 0;width:100%}
@@ -362,9 +377,9 @@
   .statstrip{display:grid;grid-template-columns:repeat(3,1fr) 15rem;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
   .statstrip>div{padding:26px 28px;border-left:1px solid var(--line)}
   .statstrip>div:first-child{border-left:0}
-  .statstrip .n{font-family:var(--serif);font-size:44px;line-height:1;letter-spacing:-.02em}
+  .statstrip .n{font-family:var(--serif);font-size:44px;line-height:1;letter-spacing:-.035em}
   .statstrip .l{font-size:13px;color:var(--muted);margin-top:10px;max-width:22ch}
-  .statstrip .cap{display:flex;align-items:center;font:11px/1.8 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--faint)}
+  .statstrip .cap{display:flex;align-items:center;font:11px/1.8 var(--mono);text-transform:uppercase;letter-spacing:-.02em;color:var(--faint)}
   @media (max-width:900px){.statstrip{grid-template-columns:1fr 1fr}.statstrip>div{border-top:1px solid var(--line)}.statstrip .cap{display:none}}
 
   /* Every section is separated by a hairline, never by colour. */
@@ -373,7 +388,7 @@
   .sec-head h2{max-width:20ch}
 
   /* Headline numerals and the big serif want slightly tighter tracking than the body. */
-  .stats .n,.big{font-family:var(--serif);letter-spacing:-.02em}
+  .stats .n,.big{font-family:var(--serif);letter-spacing:-.035em}
 </style>
 </head>
 <body>
@@ -396,6 +411,7 @@
 <div class="ruled">
 <main class="wrap">
 <div class="hero">
+  <canvas class="pxfield" aria-hidden="true"></canvas>
   <div class="heroCol">
     <div class="eyebrow">QA for AI-drafted replies</div>
     <h1>Every fix your team makes becomes a&nbsp;test.</h1>
@@ -433,9 +449,9 @@
 </main>
 
 <div class="wrap"><div class="statstrip">
-  <div><div class="n">25</div><div class="l">drafts changed by agents, each with the reason</div></div>
-  <div><div class="n">2</div><div class="l">regressions caught before the model change</div></div>
-  <div><div class="n">$0.03</div><div class="l">to replay all of them on a cheaper model</div></div>
+  <div class="tick"><div class="n">25</div><div class="l">drafts changed by agents, each with the reason</div></div>
+  <div class="tick"><div class="n">2</div><div class="l">regressions caught before the model change</div></div>
+  <div class="tick"><div class="n">$0.03</div><div class="l">to replay all of them on a cheaper model</div></div>
   <div class="cap">What one week of reviewed drafts tells you.</div>
 </div></div>
 
@@ -591,12 +607,12 @@
 <section id="capabilities" class="band">
   <div class="eyebrow">Capabilities</div><h2 style="margin-bottom:40px">What Overturn handles</h2>
   <div class="feat">
-    <div><h4>Capture at the point of fix</h4><p>No one opens another dashboard. The Zendesk app diffs the AI draft against what the expert sent and asks for one line on why; Slack, <code>&lt;CorrectButton&gt;</code> and <code>/v1/capture</code> cover everything else. The fix is recorded with the reason attached.</p></div>
-    <div><h4>The AI draft scorecard</h4><p>Untouched rate, fixes by reason, time to send: the QA numbers a support lead already reports, for AI drafts, by team and by week. Never a per-agent rate. The correction record and the regression suite come with it.</p></div>
-    <div><h4>Safe replay</h4><p>Tool calls are matched to recordings by fingerprint, so a model that takes a different path still gets the right answers. Nothing is emailed, refunded or written twice.</p></div>
-    <div><h4>Can a cheaper model do the job?</h4><p>Replay the same suite against several models at once and read them side by side: pass rate, regressions and cost per run, scored on your team's own corrections.</p></div>
-    <div><h4>A model you own</h4><p>Export every correction as SFT or DPO JSONL, fine-tune an open model on Together or in your own cloud, gate it against the suite, shadow it on live traffic, promote it by hand. Or pull the closest fixes into your prompt with <code>ov.examples()</code> today.</p></div>
-    <div><h4>Decision fields</h4><p>Scoring looks at the fields the human changed, not the phrasing. A judge model handles free text, and says which model it used.</p></div>
+    <div class="tick"><h4>Capture at the point of fix</h4><p>No one opens another dashboard. The Zendesk app diffs the AI draft against what the expert sent and asks for one line on why; Slack, <code>&lt;CorrectButton&gt;</code> and <code>/v1/capture</code> cover everything else. The fix is recorded with the reason attached.</p></div>
+    <div class="tick"><h4>The AI draft scorecard</h4><p>Untouched rate, fixes by reason, time to send: the QA numbers a support lead already reports, for AI drafts, by team and by week. Never a per-agent rate. The correction record and the regression suite come with it.</p></div>
+    <div class="tick"><h4>Safe replay</h4><p>Tool calls are matched to recordings by fingerprint, so a model that takes a different path still gets the right answers. Nothing is emailed, refunded or written twice.</p></div>
+    <div class="tick"><h4>Can a cheaper model do the job?</h4><p>Replay the same suite against several models at once and read them side by side: pass rate, regressions and cost per run, scored on your team's own corrections.</p></div>
+    <div class="tick"><h4>A model you own</h4><p>Export every correction as SFT or DPO JSONL, fine-tune an open model on Together or in your own cloud, gate it against the suite, shadow it on live traffic, promote it by hand. Or pull the closest fixes into your prompt with <code>ov.examples()</code> today.</p></div>
+    <div class="tick"><h4>Decision fields</h4><p>Scoring looks at the fields the human changed, not the phrasing. A judge model handles free text, and says which model it used.</p></div>
   </div>
   <div class="cards">
     <div><h4>CorrectButton for your own UI</h4><p>A React component and a one-line handler that turn the "fix this" button you already have into corrections, without changing your data model.</p><a class="link" href="/docs/correct-button/">How it works →</a></div>
@@ -676,6 +692,51 @@ if(!document.querySelector('script[src$="/docs/analytics.js"]')){const a=documen
 <script>
 document.querySelectorAll('[data-copy]').forEach(btn=>btn.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(btn.dataset.copy).textContent).then(()=>{btn.style.color='#1f9d5f';setTimeout(()=>btn.style.color='',1200)}).catch(()=>{});}));
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// hero pixel field: a faint grid of squares that lights up around the cursor and decays
+// behind it. Canvas, not DOM: ~4k cells a frame. Stops itself when nothing is still warm,
+// and when the node leaves the page (the Framer mount clears its root on unmount).
+(()=>{const cv=document.querySelector('canvas.pxfield');if(!cv)return;
+  const ctx=cv.getContext('2d',{alpha:true});if(!ctx)return;
+  const PITCH=16,SQ=5,REACH=138,DECAY=2.1;
+  let w=0,h=0,cols=0,rows=0,heat=null,jit=null,px=-1e5,py=-1e5,raf=0,last=0,warm=false;
+  function size(){const r=cv.getBoundingClientRect();if(!r.width||!r.height)return false;
+    const d=Math.min(window.devicePixelRatio||1,2);
+    w=r.width;h=r.height;cols=Math.ceil(w/PITCH)+1;rows=Math.ceil(h/PITCH)+1;
+    cv.width=Math.round(w*d);cv.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0);
+    const n=cols*rows;
+    if(!heat||heat.length!==n){heat=new Float32Array(n);jit=new Float32Array(n);
+      // a fixed per-cell multiplier so the lit area reads as sparks, not a disc
+      for(let k=0;k<n;k++)jit[k]=0.35+Math.random()*0.65;}
+    return true;}
+  function frame(t){raf=0;
+    if(!cv.isConnected)return;
+    const dt=Math.min((t-last)/1000||0.016,0.05);last=t;
+    const r=cv.getBoundingClientRect(),mx=px-r.left,my=py-r.top;
+    ctx.clearRect(0,0,w,h);warm=false;
+    for(let j=0;j<rows;j++){const y=j*PITCH,dy=y-my;
+      for(let i=0;i<cols;i++){const x=i*PITCH,k=j*cols+i;
+        if(!reduce){const dx=x-mx,d=Math.sqrt(dx*dx+dy*dy);
+          if(d<REACH){const up=(1-d/REACH);heat[k]=Math.max(heat[k],up*up*up*jit[k]);}
+          if(heat[k]>0){heat[k]=Math.max(0,heat[k]-dt*DECAY);if(heat[k]>0.004)warm=true;}}
+        const v=heat[k];
+        ctx.fillStyle=v>0.035?'rgba(240,74,0,'+(0.14+v*0.86).toFixed(3)+')':'rgba(16,16,16,0.045)';
+        ctx.fillRect(x,y,SQ,SQ);}}
+    if(warm)raf=requestAnimationFrame(frame);}
+  function kick(){if(!raf){last=performance.now();raf=requestAnimationFrame(frame);}}
+  function repaint(){if(size())kick();}
+  if(!size())return;
+  frame(performance.now());
+  if(!reduce){
+    window.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();
+      if(e.clientY<r.top-60||e.clientY>r.bottom+60)return;
+      px=e.clientX;py=e.clientY;kick();},{passive:true});
+    window.addEventListener('pointerleave',()=>{px=py=-1e5;kick();},{passive:true});
+    window.addEventListener('scroll',()=>{if(warm)kick();},{passive:true});
+  }
+  window.addEventListener('resize',repaint);
+  document.fonts&&document.fonts.ready.then(repaint);
+  setTimeout(repaint,60);})();
 
 // hero phases
 (()=>{const labs=[...document.querySelectorAll('.lab.phase')];const now=document.getElementById('now');const times=['11:41','11:52','12:04','12:15'];let p=0;
