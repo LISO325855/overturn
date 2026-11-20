@@ -12,25 +12,34 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:image" content="https://docs.overturn.run/media/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#fff;--fg:#111;--muted:#5f5f66;--faint:#9a9aa2;--line:#e6e6ea;--panel:#f6f6f7;
-    --accent:#d9480f;--ok:#1f9d5f;--bad:#d33c3c;--warn:#c98a12;
+    --bg:#fbfaf8;--fg:#14130f;--muted:#6b6861;--faint:#9b978e;--line:#e5e2db;--panel:#f3f1ec;
+    --accent:#ee4111;--ok:#1f9d5f;--bad:#d33c3c;--warn:#c98a12;
     --blue:#3b5bdb;--red:#d9480f;--purple:#7048e8;--amber:#e8960c;
-    --sans:"DM Sans",ui-sans-serif,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --ink:#14130f;--paper:#fbfaf8;
+    --sans:"Inter",ui-sans-serif,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --serif:"Instrument Serif",Iowan Old Style,Georgia,serif;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased;font-optical-sizing:auto}
   a{color:inherit;text-decoration:none}
   code,pre,.mono{font-family:var(--mono)}
-  .wrap{max-width:1460px;margin:0 auto;padding:0 72px}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 56px;position:relative}
+  /* One continuous pair of rules down the whole page, not a line per section. */
+  .ruled{position:relative}
+  .ruled::before{content:"";position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
+    width:min(1280px,100%);border-left:1px solid var(--line);border-right:1px solid var(--line);
+    pointer-events:none;z-index:0}
+  .ruled>*{position:relative;z-index:1}
   @media (max-width:1000px){.wrap{padding:0 24px}}
   @media (max-width:640px){.wrap{padding:0 16px}}
   h1,h2,h3{font-weight:400;letter-spacing:-.02em;margin:0}
+  h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:-.015em}
   .sor{margin:-6px 0 24px;font-size:17px;font-weight:500;color:var(--fg)}
-  h2{font-size:34px;line-height:1.15}
+  h2{font-size:clamp(32px,3.6vw,50px);line-height:1.04}
   p{margin:0}
   .muted{color:var(--muted)}
   .arrow{color:var(--accent)}
@@ -38,18 +47,22 @@
   .link:hover{text-decoration:underline}
   .btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 26px;border-radius:999px;font-size:16px;font-weight:500;border:1px solid var(--line);background:#fff;color:var(--fg);white-space:nowrap;transition:background .15s,border-color .15s}
   .btn:hover{background:var(--panel)}
-  .btn.primary{background:var(--fg);color:#fff;border-color:var(--fg)}
-  .btn.primary:hover{background:#2a2a2e}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.primary:hover{background:#d5370c;border-color:#d5370c}
+  .btn.ink{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .btn.ink:hover{background:#2c2a24}
   .btn.sm{height:38px;padding:0 18px;font-size:15px}
   .btn.block{width:100%;justify-content:center}
 
   /* announcement */
-  .ann{background:linear-gradient(90deg,#fde7df,#f2e9ff 50%,#e3f1ff);font-size:15px;text-align:center;padding:10px 16px;display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap}
-  .ann .new{border:1px solid rgba(0,0,0,.25);border-radius:999px;padding:1px 10px;font-size:13px;font-weight:500}
-  .ann a{font-weight:500;color:var(--fg)}
+  .ann{background:var(--ink);color:#f4f2ee;font-size:14px;text-align:center;padding:11px 16px;display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap}
+  .ann .new{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:1px 10px;font:11px/1.6 var(--mono);text-transform:uppercase;letter-spacing:.12em}
+  .ann code{color:#fff}
+  .ann a{font-weight:500;color:#fff;white-space:nowrap}
+  .ann a:hover{color:var(--accent)}
 
   /* nav */
-  nav.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  nav.top{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);background:rgba(251,250,248,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   nav.top .wrap{height:76px;display:flex;align-items:center;gap:30px}
   .brand{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:500;letter-spacing:-.01em}
   .brand .logo{height:28px;width:auto;display:block}
@@ -63,7 +76,7 @@
   .hero{padding:72px 0 40px;display:grid;grid-template-columns:minmax(0,600px) 1fr;gap:40px;align-items:start}
   @media (max-width:1000px){.hero{grid-template-columns:1fr}}
   .pill{display:inline-flex;align-items:center;border:1px solid #9bd3b5;color:#1d6f45;border-radius:999px;padding:4px 14px;font-size:14px;margin-bottom:34px}
-  h1{font-size:clamp(38px,3.9vw,56px);line-height:1.04;letter-spacing:-.03em;text-wrap:balance}
+  h1{font-size:clamp(44px,7vw,104px);line-height:.94;letter-spacing:-.02em;text-wrap:balance}
   .lede{font-size:20px;line-height:1.5;color:#3a3a40;margin:30px 0 32px;max-width:620px}
   .lede b{font-weight:500;color:var(--fg)}
   .install{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;height:54px;max-width:460px;margin-bottom:24px;overflow:hidden}
@@ -120,7 +133,7 @@
   .phase.on{opacity:1;transform:none}
 
   /* on this page */
-  .onpage{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:24px;position:sticky;top:76px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);z-index:40}
+  .onpage{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:0;position:sticky;top:76px;background:rgba(251,250,248,.92);backdrop-filter:blur(10px);z-index:40}
   .onpage .wrap{display:flex;gap:28px;height:50px;align-items:center;font-size:15px;overflow-x:auto;white-space:nowrap}
   .onpage .wrap>span{color:var(--muted);padding-right:28px;border-right:1px solid var(--line)}
   .onpage a:hover{color:var(--accent)}
@@ -324,6 +337,43 @@
     footer .r a{padding:12px 6px;margin:-12px -6px}
   }
   @media (prefers-reduced-motion:reduce){.step.on .bar{animation:none;width:100%}.cursor::after{animation:none}}
+
+  /* ---- editorial layer ---- */
+  /* Small mono caps in the accent are the page's only decoration; they label a section
+     the way a plate caption labels a figure. */
+  .eyebrow{display:block;font:12px/1 var(--mono);text-transform:uppercase;letter-spacing:.16em;color:var(--accent);margin-bottom:18px}
+  .heroCol .eyebrow{margin-bottom:30px}
+  .sec-head .eyebrow{margin-bottom:12px}
+  .sec-head{flex-wrap:wrap}
+  .eyebrow::before{content:"| · "}.eyebrow::after{content:" · |"}
+
+  .hero{padding:96px 0 0;display:block}
+  .heroCol{max-width:980px;margin:0 auto;text-align:center}
+  .heroCol .lede{font-size:20px;line-height:1.55;color:var(--muted);margin:28px auto 36px;max-width:660px}
+  .heroCol .ctas{justify-content:center;margin-bottom:28px}
+  .heroCol .install{margin:0 auto 22px}
+  .heroCol .sor{font:12px/1 var(--mono);text-transform:uppercase;letter-spacing:.13em;color:var(--faint);font-weight:400;margin:0 0 8px}
+
+  /* The scene sits under the headline as a plate, bounded by rules like everything else. */
+  .hero .scene{height:560px;margin:8px 0 0;width:100%}
+  @media (max-width:1000px){.hero .scene{height:460px}}
+
+  /* Numbers read as a ruled strip, not as cards. */
+  .statstrip{display:grid;grid-template-columns:repeat(3,1fr) 15rem;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .statstrip>div{padding:26px 28px;border-left:1px solid var(--line)}
+  .statstrip>div:first-child{border-left:0}
+  .statstrip .n{font-family:var(--serif);font-size:44px;line-height:1;letter-spacing:-.02em}
+  .statstrip .l{font-size:13px;color:var(--muted);margin-top:10px;max-width:22ch}
+  .statstrip .cap{display:flex;align-items:center;font:11px/1.8 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--faint)}
+  @media (max-width:900px){.statstrip{grid-template-columns:1fr 1fr}.statstrip>div{border-top:1px solid var(--line)}.statstrip .cap{display:none}}
+
+  /* Every section is separated by a hairline, never by colour. */
+  section{padding:88px 0 88px;border-top:1px solid var(--line);margin-top:0}
+  section.band{border-top:1px solid var(--line);margin-top:0;padding-top:88px}
+  .sec-head h2{max-width:20ch}
+
+  /* Headline numerals and the big serif want slightly tighter tracking than the body. */
+  .stats .n,.big{font-family:var(--serif);letter-spacing:-.02em}
 </style>
 </head>
 <body>
@@ -343,20 +393,16 @@
   </div>
 </div></nav>
 
+<div class="ruled">
 <main class="wrap">
 <div class="hero">
-  <div>
-    <div class="pill">Open beta · Apache-2.0 · Zendesk app · Salesforce next</div>
-    <h1>Quality control for AI-drafted&nbsp;replies.</h1>
-    <p class="lede">Your agents already review every AI draft before it goes out. <b>Overturn</b>, installed from the Zendesk marketplace, records what the AI wrote, what the agent sent and why it changed. You get the number nobody has today: how often the draft was right, by team and by week, with the reasons it was not. Every fix becomes a test that runs before the next model or prompt change, so the AI does not make the same mistake twice. Works with any drafting tool: Zendesk's, Salesforce's, or your own.</p>
-    <p class="sor">Overturn is QA for AI-drafted replies: any help desk, any vendor, checked before the change&nbsp;ships.</p>
-    <div class="install"><div class="cmd"><span class="logos"><span style="background:#111">TS</span><span style="background:#3572a5">Py</span><span style="background:#f5a623">OT</span></span><code id="cmd">npm i @overturn-ai/sdk</code></div><button type="button" aria-label="Copy" data-copy="cmd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+  <div class="heroCol">
+    <div class="eyebrow">QA for AI-drafted replies</div>
+    <h1>Every fix your team makes becomes a&nbsp;test.</h1>
+    <p class="lede">Your agents already review every AI draft before it goes out. Overturn records what the AI wrote, what the agent sent and why it changed, then replays every fix before the next model or prompt ships.</p>
     <div class="ctas"><a class="btn primary" href="/docs/capture/" data-cta="hero_zendesk_app">Install the Zendesk app</a><a class="btn" href="https://app.overturn.run/login" data-cta="hero_start_free">Start free</a><a class="btn" href="/docs/quickstart/" data-cta="hero_docs">Read the docs</a></div>
-    <div class="stats"><div class="cap">What one week of reviewed drafts tells you.</div><div class="row">
-      <div><div class="n">25</div><div class="l">drafts changed by agents, each with the reason</div></div>
-      <div><div class="n">2</div><div class="l">regressions caught before the model change</div></div>
-      <div><div class="n">$0.03</div><div class="l">to replay all of them on a cheaper model</div></div>
-    </div></div>
+    <div class="install"><div class="cmd"><span class="logos"><span style="background:#111">TS</span><span style="background:#3572a5">Py</span><span style="background:#f5a623">OT</span></span><code id="cmd">npm i @overturn-ai/sdk</code></div><button type="button" aria-label="Copy" data-copy="cmd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+    <p class="sor">Open beta · Apache-2.0 · Zendesk app · Salesforce next</p>
   </div>
 
   <div class="scene" aria-hidden="true">
@@ -385,6 +431,13 @@
   </div>
 </div>
 </main>
+
+<div class="wrap"><div class="statstrip">
+  <div><div class="n">25</div><div class="l">drafts changed by agents, each with the reason</div></div>
+  <div><div class="n">2</div><div class="l">regressions caught before the model change</div></div>
+  <div><div class="n">$0.03</div><div class="l">to replay all of them on a cheaper model</div></div>
+  <div class="cap">What one week of reviewed drafts tells you.</div>
+</div></div>
 
 <div class="onpage"><div class="wrap"><span>On this page</span><a href="#quickstart">Quickstart</a><a href="#product">Product</a><a href="#compare">With and without</a><a href="#results">Replay results</a><a href="#api">The API</a><a href="#capabilities">Capabilities</a><a href="#deployment">Deployment</a><a href="#frameworks">Frameworks</a><a href="#next">Design partners</a><a href="#plans">Plans</a><a href="#faq">FAQ</a></div></div>
 
@@ -464,7 +517,7 @@
 <section id="product" class="band">
   <div class="flow">
     <div>
-      <h2>From an agent's fix<br>to a test that runs before every change.</h2>
+      <div class="eyebrow">How it works</div><h2>From an agent's fix<br>to a test that runs before every change.</h2>
       <div class="fsteps" id="fsteps">
         <div class="fstep on" data-i="0"><h3>Record</h3><p>The Zendesk app records the AI draft and the thread the agent saw; or wrap the model client you already have and every prompt, tool call and answer is recorded with a fingerprint.</p></div>
         <div class="fstep" data-i="1"><h3>Correct</h3><p>The agent sends the reply as drafted, or changes it and picks a reason in one click, in the help desk they already use. The case freezes with the AI's draft, the agent's fix, and the reason.</p></div>
@@ -502,7 +555,7 @@
 <section id="results" class="band">
   <div class="res-grid">
     <div>
-      <h2>Replay results</h2>
+      <div class="eyebrow">Replay report</div><h2>Replay results</h2>
       <p class="muted" style="margin-top:12px">What one report said after swapping the model on the example agent.</p>
       <div class="bigstats">
         <div><div class="n">25</div><div class="l">cases replayed</div></div>
@@ -524,7 +577,7 @@
 
 <section id="api" class="band">
   <div class="ep">
-    <div><h2>Five API endpoints</h2><p class="muted" style="margin-top:14px;max-width:460px">Record runs, attach corrections, start replays, read the report. The SDKs and CLI call the same API you can.</p><p style="margin-top:22px"><a class="link" href="/docs/sdk/">API reference →</a></p></div>
+    <div><div class="eyebrow">The API</div><h2>Five API endpoints</h2><p class="muted" style="margin-top:14px;max-width:460px">Record runs, attach corrections, start replays, read the report. The SDKs and CLI call the same API you can.</p><p style="margin-top:22px"><a class="link" href="/docs/sdk/">API reference →</a></p></div>
     <table>
       <tr><td>POST /v1/runs</td><td>a recorded run: prompts, tool calls with their results, the final answer</td></tr>
       <tr><td>POST /v1/corrections</td><td>approve, edit, reject or escalate a run — it becomes a case with the fix attached</td></tr>
@@ -536,7 +589,7 @@
 </section>
 
 <section id="capabilities" class="band">
-  <h2 style="margin-bottom:40px">What Overturn handles</h2>
+  <div class="eyebrow">Capabilities</div><h2 style="margin-bottom:40px">What Overturn handles</h2>
   <div class="feat">
     <div><h4>Capture at the point of fix</h4><p>No one opens another dashboard. The Zendesk app diffs the AI draft against what the expert sent and asks for one line on why; Slack, <code>&lt;CorrectButton&gt;</code> and <code>/v1/capture</code> cover everything else. The fix is recorded with the reason attached.</p></div>
     <div><h4>The AI draft scorecard</h4><p>Untouched rate, fixes by reason, time to send: the QA numbers a support lead already reports, for AI drafts, by team and by week. Never a per-agent rate. The correction record and the regression suite come with it.</p></div>
@@ -553,7 +606,7 @@
 </section>
 
 <section id="deployment" class="band dep">
-  <div class="sec-head"><h2>Deployment options</h2><a class="link" href="/docs/self-hosting/">Self-hosting guide →</a></div>
+  <div class="eyebrow">Deployment</div><div class="sec-head"><h2>Deployment options</h2><a class="link" href="/docs/self-hosting/">Self-hosting guide →</a></div>
   <p class="intro">Every deployment runs the same code. The hosted app is free during the open beta. Self-hosting needs one Postgres with pgvector and the two containers; the SDKs only change a base URL.</p>
   <table>
     <tr><td>Hosted</td><td>app.overturn.run. Sign in with email, create a key, send the first run. We run Postgres and the replay workers.</td></tr>
@@ -569,14 +622,14 @@
 <section id="next" class="band">
   <div class="next">
     <div class="pill">Design partners · support and ops teams</div>
-    <h2>Any team that sends AI drafts. Insurance claims is where we started.</h2>
+    <div class="eyebrow">Design partners</div><h2>Any team that sends AI drafts. Insurance claims is where we started.</h2>
     <p>Our first teams are claims desks: an adjuster changing a coverage decision or a reserve is the hardest case for AI QA, with the most at stake, and the reason picker ships with a claims pack. The same loop runs for customer support, billing, field service and compliance review, on any AI that drafts into Zendesk, and Salesforce Service Cloud next. We are taking a small number of design partners on Zendesk now. If your agents review AI drafts and you have no number for how often the draft is right, write to us.</p>
     <a class="btn primary" href="mailto:shireen@overturn.run?subject=Overturn%20design%20partner">Talk to us about your team</a>
   </div>
 </section>
 
 <section id="plans" class="band">
-  <div class="sec-head"><h2>Plans</h2><a class="link" href="/docs/hosted/">What the beta includes →</a></div>
+  <div class="eyebrow">Plans</div><div class="sec-head"><h2>Plans</h2><a class="link" href="/docs/hosted/">What the beta includes →</a></div>
   <div class="plans">
     <div class="plan"><h4>Open beta <span>$0 / month</span></h4><p>The hosted app, free while we're in beta. Enough for a team's agents in production.</p><ul><li>Unlimited runs and corrections</li><li>Replays on your own model keys</li><li>30-day raw run retention; cases kept</li><li>Email sign-in, Slack review</li></ul><a class="btn block" href="https://app.overturn.run/login">Start free</a></div>
     <div class="plan"><h4>Self-hosted <span>Free, forever</span></h4><p>Apache-2.0. The same code as the hosted app, on your Postgres.</p><ul><li>One Postgres, two containers</li><li>Recordings never leave your network</li><li>Any retention you set</li><li>Air-gapped replay against local models</li></ul><a class="btn primary block" href="/docs/self-hosting/">Self-hosting guide</a></div>
@@ -586,7 +639,7 @@
 
 <section id="faq" class="band">
   <div class="faq">
-    <h2>Frequently<br>asked questions</h2>
+    <div class="eyebrow">FAQ</div><h2>Frequently<br>asked questions</h2>
     <div>
       <details><summary><span class="i">01</span>Who is this for?<span class="ch">⌄</span></summary><div class="a">Support and ops teams whose agents review AI-drafted replies before sending: customer support, claims, billing, field service, compliance review. If AI drafts into your Zendesk or Salesforce and nobody can say how often the draft was right, this is for you. Engineers get the same thing as an open-source SDK.</div></details>
       <details><summary><span class="i">02</span>What do I send?<span class="ch">⌄</span></summary><div class="a">From Zendesk, nothing: the app captures the draft, the thread, what was sent and the reason. From code, runs: the input, every prompt and model answer, every tool call with its result, and the final output. OpenTelemetry users send the spans they already have.</div></details>
@@ -613,6 +666,7 @@
   <span>© 2026 · Apache-2.0 · self-host on one Postgres</span>
   <div class="r"><a href="/docs/">Docs</a><a href="https://github.com/overturn-ai/overturn">GitHub</a><a href="/docs/terms/">Terms</a><a href="/docs/privacy/">Privacy</a><a href="https://app.overturn.run/login">Sign in</a></div>
 </div></footer>
+</div><!-- /.ruled -->
 
 <script>
 // PostHog (public/analytics.js, docs/privacy). A bare <script> so scripts/assemble.mjs carries it into

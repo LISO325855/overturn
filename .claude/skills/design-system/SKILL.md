@@ -18,14 +18,18 @@ Dark, dense, built for people who read traces all day.
 - Light theme exists (`?theme=light`, `ov-theme`) and must stay readable, but dark is the design.
 - Motion: 120ms. No skeleton shimmer; a quiet progress bar at the top.
 
-## Marketing site (apps/docs → overturn.run) — reference: past.dev
-Light, editorial, calm. The opposite of the app on purpose.
-- Warm white page, ink text, one accent used once (hero illustration and primary CTA).
+## Marketing site (apps/docs → overturn.run) — reference: appliedcompute.com (was past.dev, changed 19 Nov 2026)
+Light, editorial, calm. The opposite of the app on purpose. Reads like a journal, not a SaaS template.
+- Warm paper `#fbfaf8`, warm ink `#14130f`, hairline `#e5e2db`, one hot orange `#ee4111`.
+- The orange is spent on three things and nothing else: section eyebrows, the primary CTA, and diagram linework.
+- Display type is a high-contrast editorial serif (Instrument Serif); body and UI are Inter; mono (JetBrains Mono) carries eyebrows, labels, ids and legal lines. Mono labels are uppercase at `.13–.16em` tracking.
+- Every section opens with a mono orange eyebrow above the serif headline. One continuous pair of vertical hairlines runs down the page at the 1280px column edge, and sections are separated by hairlines, never by a change of background.
 - Hero: headline ≤ 9 words ("Every time a human fixes your agent, Overturn keeps it."), 3D illustration with hover micro-interactions, real product screens in the white version of the app.
 - Sections in order: hero → numbered quickstart (1-2-3, copyable commands) → with/without comparison → how it works (capture → correction record → regression test → owned model) → claims-teams-first → FAQ → footer.
-- Type: Inter or Geist, headline 500 weight, 48px max; body 17px/1.6, 680px measure.
+- Type: hero headline `clamp(44px,7vw,104px)` serif at 400; section headlines `clamp(32px,3.6vw,50px)`; body 17px/1.55, 660px measure.
 - Logo: the "Pinwheel" mark (four rotating half-disc blades) + lowercase "overturn" wordmark, wordmark lighter and smaller than the mark. Never a SemiBold wordmark.
-- No vertical grid lines, no dark sections, no gradients, no stock illustration, no logos we have not earned.
+- Vertical grid lines are now the skeleton, not a thing to avoid. Still no gradients, no stock illustration, and no logos, customer names or quotes we have not earned — `docs/wiki/facts.md` governs every claim on the page. A dark section is allowed once, at most, and only to close the page.
+- Hero is centred: eyebrow, headline, one subhead of at most two lines, then the CTA row. Long explanation goes below the fold, never in the hero.
 
 ## Both
 Sentence case. No emoji. Empty states say what to do next. Status words are exact: pass / fail / flaky / pending — never "success"/"error".
