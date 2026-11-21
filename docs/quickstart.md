@@ -77,7 +77,10 @@ Every correction is a case: `npx overturn cases list`.
 
 ## 4. Replay
 
+Replaying against a `fake/…` model needs the deterministic model server running, or every case comes back `ECONNREFUSED 127.0.0.1:4010`:
+
 ```bash
+pnpm --filter @overturn-ai/example-ticket-triage fake-openai &
 npx overturn replay --model fake/fake-triage-weak --prompt ticket-triage@v2 --format md
 ```
 

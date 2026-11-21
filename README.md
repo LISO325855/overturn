@@ -30,12 +30,13 @@ pnpm db:migrate
 pnpm bootstrap --email you@example.com                # prints OVERTURN_API_KEY=ov_live_... ; paste it into .env
 pnpm --filter @overturn-ai/api start &                   # API on :4000 (magic links print here)
 OVERTURN_API_URL=http://localhost:4000 pnpm --filter @overturn-ai/web start &   # UI on :3000
+pnpm --filter @overturn-ai/example-ticket-triage fake-openai &   # deterministic model on :4010, so the loop runs offline
 pnpm --filter @overturn-ai/example-ticket-triage seed    # the example agent triages 30 tickets -> 30 runs
 pnpm --filter @overturn-ai/example-ticket-triage corrections   # 20 human corrections -> 20 cases
 npx overturn replay --model fake/fake-triage-weak --prompt ticket-triage@v2 --format md
 ```
 
-Open http://localhost:3000 to see the runs, click **Correct** on any model step, and watch the case appear. The last command replays all cases against a deliberately weaker model with a new prompt and prints regressions, still-wrong and fixed cases side by side with the human's correction. Without `OPENAI_API_KEY` the example runs on a deterministic fake model, so the whole loop works offline; with keys on the server try `--model openai/gpt-4.1-mini` or `--model anthropic/claude-haiku-4-5`, and `--mode trajectory` to re-run whole trajectories through your agent.
+Open http://localhost:3000 to see the runs, click **Correct** on any model step, and watch the case appear. The last command replays all cases against a deliberately weaker model with a new prompt and prints regressions, still-wrong and fixed cases side by side with the human's correction. Without `OPENAI_API_KEY` the example runs on the deterministic fake model you started above, so the whole loop works offline — if the replay reports `ECONNREFUSED 127.0.0.1:4010` on every case, that server is not running; with keys on the server try `--model openai/gpt-4.1-mini` or `--model anthropic/claude-haiku-4-5`, and `--mode trajectory` to re-run whole trajectories through your agent.
 
 ## How it works
 
