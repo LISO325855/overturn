@@ -261,6 +261,11 @@
   .dots button.pp{width:44px;height:44px;background:#fff;border:1px solid var(--line)}
   .dots .pp{margin:0 8px 0 0}
   .how{max-width:980px;margin:36px auto 0;font-size:16px;color:#333}
+  /* The source note is not an aside. It stays open, because a page full of example
+     data has to say where the example data came from without anyone clicking. */
+  .how.open{border:1px solid var(--line);border-radius:8px;background:#f7f7f4;padding:20px 24px}
+  .how.open h4{margin:0 0 8px;font:11px/1.6 var(--mono);text-transform:uppercase;letter-spacing:-.02em;color:var(--accent);font-weight:400}
+  .how.open p{margin:0;font-size:15px;line-height:1.6;color:var(--muted)}
   .how summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
   .how summary::-webkit-details-marker{display:none}
   .how p{margin-top:12px;color:var(--muted)}
@@ -341,6 +346,8 @@
   footer{border-top:1px solid var(--line);padding:40px 0 56px;font-size:14px;color:var(--muted)}
   footer .wrap{display:flex;gap:24px;flex-wrap:wrap;align-items:center}
   footer .r{margin-left:auto;display:flex;gap:22px}
+  footer .synth{flex-basis:100%;order:9;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:13px;line-height:1.6;color:var(--faint);max-width:70ch}
   footer a:hover{color:var(--fg)}
   /* phone: every tap target is at least 44px (padding grows the hit area, negative margin keeps the layout) */
   @media (max-width:640px){
@@ -534,7 +541,7 @@
   <div class="tick"><div class="n">25</div><div class="l">drafts changed by agents, each with the reason</div></div>
   <div class="tick"><div class="n">2</div><div class="l">regressions caught before the model change</div></div>
   <div class="tick"><div class="n">$0.03</div><div class="l">to replay all of them on a cheaper model</div></div>
-  <div class="cap">What one week of reviewed drafts tells you.</div>
+  <div class="cap">One week on the example agent in the repo.</div>
 </div></div>
 
 
@@ -554,7 +561,7 @@
       <div class="ph" id="ph">zendesk · ticket #48213</div>
       <div class="pb">
         <div class="view on" data-v="0">
-<pre><span class="c">// what the Zendesk app sends when Ray hits Submit</span>
+<pre><span class="c">// what the Zendesk app sends when the adjuster hits Submit</span>
 <span class="k">POST</span> /v1/capture
 {
   source: <span class="s">"zendesk"</span>, externalId: <span class="s">"zd:48213"</span>,
@@ -668,7 +675,7 @@
   <div class="cmp-head"><span class="chip">🛠 Your agent</span><span>+</span><span class="chip"><svg width="18" height="18" viewBox="8 8 48 48" aria-hidden="true" fill="#111"><path d="M32.000 32.000 L32.000 9.000 A11.500 11.500 0 0 1 32.000 32.000Z M32.000 32.000 L55.000 32.000 A11.500 11.500 0 0 1 32.000 32.000Z M32.000 32.000 L32.000 55.000 A11.500 11.500 0 0 1 32.000 32.000Z M32.000 32.000 L9.000 32.000 A11.500 11.500 0 0 1 32.000 32.000Z"/></svg>Overturn</span></div>
   <div id="cmp"></div>
   <div class="dots" id="cmp-dots"><button class="pp" id="cmp-pp" type="button" aria-label="Pause"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></button></div>
-  <details class="how"><summary>How this was measured <span class="ch">⌄</span></summary><p>Timings and costs are from the example agent in the repository (<code>examples/ticket-triage</code>, 30 tickets, 20 corrections) replayed on the hosted app. The "without" column is what the same change costs when the only signal is the next batch of corrections. Run it yourself: <code>pnpm --filter ticket-triage demo</code>.</p></details>
+  <div class="how open"><h4>How this was measured</h4><p>Timings and costs are from the example agent in the repository (<code>examples/ticket-triage</code>, 30 tickets, 20 corrections) replayed on the hosted app. The "without" column is what the same change costs when the only signal is the next batch of corrections. Run it yourself: <code>pnpm --filter ticket-triage demo</code>.</p></div>
 </section>
 
 <section id="results" class="band tint">
@@ -830,6 +837,7 @@
 <footer><div class="wrap">
   <span class="brand brand-sm"><svg class="logo" viewBox="9 9.00 273.16 46.00" fill="#0c0c0c" aria-label="Overturn" role="img"><path d="M32.000 32.000 L32.000 9.000 A11.500 11.500 0 0 1 32.000 32.000Z M32.000 32.000 L55.000 32.000 A11.500 11.500 0 0 1 32.000 32.000Z M32.000 32.000 L32.000 55.000 A11.500 11.500 0 0 1 32.000 32.000Z M32.000 32.000 L9.000 32.000 A11.500 11.500 0 0 1 32.000 32.000Z"/><path d="M95.12 47.52C103.61 47.52 109.32 41.20 109.32 32.06C109.32 22.86 103.61 16.48 95.12 16.48C86.62 16.48 80.88 22.86 80.88 32.06C80.88 41.20 86.62 47.52 95.12 47.52ZM95.12 42.41C90.03 42.41 86.90 38.38 86.90 32.06C86.90 25.67 90.05 21.59 95.12 21.59C100.18 21.59 103.33 25.67 103.33 32.06C103.33 38.36 100.21 42.41 95.12 42.41ZM120.85 46.85H127.15L138.48 17.15H132.21L126.39 33.43C125.60 35.74 124.84 38.08 124.11 40.38C123.38 38.08 122.62 35.74 121.80 33.43L115.90 17.15H109.54ZM152.82 47.52C159.55 47.52 164.83 43.56 165.93 37.82H160.22C159.38 40.63 156.79 42.58 152.91 42.58C147.71 42.58 144.72 38.95 144.53 33.60H166.38V32.00C166.38 22.83 160.92 16.48 152.52 16.48C144.42 16.48 138.68 23.00 138.68 32.06C138.68 41.03 144.02 47.52 152.82 47.52ZM144.58 29.10C145.09 24.38 148.10 21.43 152.57 21.43C157.07 21.43 160.11 24.38 160.59 29.10ZM170.23 46.85H176.17V29.30C176.17 24.46 178.90 22.18 182.24 22.18C183.62 22.18 184.91 22.38 185.36 22.47V16.93C184.89 16.87 184.10 16.78 183.20 16.78C179.43 16.78 177.12 18.73 176.03 21.96H175.91V17.15H170.23ZM203.81 17.15H197.79V9.05H191.83V17.15H186.60V22.04H191.83V39.76C191.83 44.54 194.50 46.85 200.07 46.85H203.81V41.96H200.92C198.55 41.96 197.79 41.20 197.79 39.00V22.04H203.81ZM217.99 47.44C221.92 47.44 224.93 45.75 226.96 42.38V46.85H232.78V17.15H226.85V34.25C226.85 39.76 223.72 42.12 219.70 42.12C215.57 42.12 213.18 39.68 213.18 34.92V17.15H207.24V35.66C207.24 43.42 211.88 47.44 217.99 47.44ZM238.21 46.85H244.14V29.30C244.14 24.46 246.87 22.18 250.22 22.18C251.59 22.18 252.89 22.38 253.34 22.47V16.93C252.86 16.87 252.07 16.78 251.17 16.78C247.40 16.78 245.10 18.73 244.00 21.96H243.89V17.15H238.21ZM262.56 29.75C262.56 24.24 265.68 21.88 269.73 21.88C273.84 21.88 276.23 24.32 276.23 29.07V46.85H282.16V28.34C282.16 20.58 277.52 16.56 271.42 16.56C267.51 16.56 264.47 18.25 262.45 21.62V17.15H256.63V46.85H262.56Z"/></svg></span>
   <span>© 2026 · Apache-2.0 · self-host on one Postgres</span>
+  <span class="synth">Every ticket, name, figure and screen on this page comes from the example agent in the repository, not from a customer.</span>
   <div class="r"><a href="/docs/">Docs</a><a href="https://github.com/overturn-ai/overturn">GitHub</a><a href="/docs/terms/">Terms</a><a href="/docs/privacy/">Privacy</a><a href="https://app.overturn.run/login">Sign in</a></div>
 </div></footer>
 </div></div><!-- /.pagecol -->
@@ -930,14 +938,14 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // comparison
 (()=>{const data=[
-  {ask:'Move claims replies from GPT-5 to a cheaper open model.',who:'Priya · 25 adjuster fixes from last week',
+  {ask:'Move claims replies from GPT-5 to a cheaper open model.',who:'Example agent · claims-reply',
    a:[['overturn replay --model deepseek-v4.1-flash','40 s · $0.03'],['2 regressions · zd:48213, zd:48377','reserve and coverage wrong again'],['keep GPT-5 for total-loss claims','ships Tuesday']],ares:'<b>Known before the switch.</b> Both regressions are fixes an adjuster made last week; the report shows them side by side.',
    b:[['switch, watch the queue','3 days'],['two complaints reach the claims manager','Thursday'],['revert, write a postmortem','Friday']],bres:'<b>Found by policyholders.</b> The two wrong letters were the same two fixes.'},
-  {ask:'Tighten the prompt: never approve a payout before the inspection report.',who:'Sam · prompt claims-reply@v3',
-   a:[['overturn replay --prompt claims-reply@v3','38 s · $0.02'],['zd:48377 fixed · payout tool not called','rejected by Ray last week'],['0 regressions','25/25 expert fixes hold']],ares:'<b>The rejection became the test.</b> The case the senior adjuster rejected is the one that proves the fix.',
+  {ask:'Tighten the prompt: never approve a payout before the inspection report.',who:'Example agent · prompt claims-reply@v3',
+   a:[['overturn replay --prompt claims-reply@v3','38 s · $0.02'],['zd:48377 fixed · payout tool not called','rejected in the example set'],['0 regressions','25/25 expert fixes hold']],ares:'<b>The rejection became the test.</b> The case the senior adjuster rejected is the one that proves the fix.',
    b:[['deploy the prompt','—'],['hope nobody hits the payout path','?'],['re-read 200 tickets to be sure','afternoon']],bres:'<b>No proof.</b> Nothing tells you the other 24 cases still pass.'},
-  {ask:'Train on 300 adjuster fixes and see if the model can take the first pass.',who:'Jo · owned model',
-   a:[['overturn train --base llama-3.1-8b','20 min · gate 25/25'],['shadow on live tickets for a week','agrees with adjusters 91%'],['promote; juniors handle it unaided','experts see the new 9%']],ares:'<b>Judgment that compounds.</b> The next 9% get captured too.',
+  {ask:'Train on 300 adjuster fixes and see if the model can take the first pass.',who:'Example agent · owned model',
+   a:[['overturn train --base llama-3.1-8b','20 min · gate 25/25'],['shadow on live tickets','every answer scored against the suite'],['promote by hand, or do not','you decide, with the report in front of you']],ares:'<b>Judgment that compounds.</b> Whatever the experts still change gets captured too.',
    b:[['keep renting the frontier model','$ per call, forever'],['fixes vanish into tickets','nothing learns'],['experts re-check every case','senior time']],bres:'<b>Nothing improves.</b> The same mistakes, corrected by the same people, every week.'}];
   const el=document.getElementById('cmp'),dots=document.getElementById('cmp-dots');let i=0,paused=reduce,timer;
   const row=(l)=>`<div class="line"><span class="w">${l[0].split(' ')[0]}</span><span>${l[0].split(' ').slice(1).join(' ')}</span><span class="m">${l[1]}</span></div>`;
