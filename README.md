@@ -10,11 +10,11 @@
 
 [Site](https://overturn.run) · [Docs](https://docs.overturn.run) · [Wiki](https://github.com/overturn-ai/overturn/wiki) · [Discussions](https://github.com/overturn-ai/overturn/discussions) · [Hosted app](https://app.overturn.run) · [Contributing](CONTRIBUTING.md)
 
-**Overturn is QA for AI-drafted replies. It records what the AI wrote, what your agent sent and why, in the help desk they already use (Zendesk now, Salesforce Service Cloud next), and runs every fix as a test before the next model or prompt change.**
+**Every time a human fixes your agent, Overturn keeps it.**
 
-Support teams already have a QA budget line and a QA habit; AI drafts broke the loop because the review happens in the reply box and the fix disappears into the ticket. Overturn's Zendesk app watches the reply box, diffs the AI draft against what was sent, asks for a one-click reason, and gives the support lead the number nobody has today: how often the draft was right, by team and by week, with the reasons it was not. Neutral across vendors: it works whether Zendesk, Salesforce, or your own agent wrote the draft. The correction record, the regression suite and the training data for a model you own come as by-products. Open source, Apache-2.0, self-hosted on one Postgres down to the model calls.
+You built the agent. Someone on your team reviews what it writes and fixes it before it goes out, and that fix disappears — into a ticket, a Slack thread, a merged diff. Overturn records the wrong output, the fix and the reason, turns each one into a regression case scored on the decision fields rather than the prose, and replays the whole set against a new model or prompt before you ship it. The SDK records; the GitHub Action blocks the pull request on a regression.
 
-Insurance claims is the case study, not a gate: an adjuster changing a coverage decision or a reserve is the hardest version of the problem, so the reason picker ships with a claims pack and decision fields are scored exactly. The same loop runs for customer support, billing, field service and compliance review.
+It is for teams where a wrong output is costly and a human already reviews it — claims, underwriting, healthcare admin, legal, fintech support. Insurance claims is the case study, not a gate: an adjuster changing a coverage decision or a reserve is the hardest version of the problem, so the reason picker ships with a claims pack. Open source, Apache-2.0, self-hosted on one Postgres down to the model calls.
 
 ![Record a run, correct a step, get a case, replay it against another model, read the report](docs/assets/loop.gif)
 
@@ -40,7 +40,7 @@ Open http://localhost:3000 to see the runs, click **Correct** on any model step,
 ## How it works
 
 1. **Record.** `ov.wrapOpenAI(client)` turns every model call into a step; `ov.tool(name, fn, { sideEffect })` turns every tool call into a fingerprinted step. Batched, retried, never throws into your agent. OpenTelemetry GenAI traces work too.
-2. **Correct, where the expert already works.** The [Zendesk app](packages/zendesk-app) diffs what the AI drafted against what the agent sent, asks for a one-line reason, and files it ([`POST /v1/capture`](docs/capture.md) does the same from any tool; no SDK needed). Or a human approves, edits, rejects or escalates in the UI, in your own product with `<CorrectButton>` + `ov.correctionHandler()` ([Next.js example](examples/next-review)), from your code with `ov.correct()`, via `POST /v1/corrections`, or from the Slack message each completed run posts (Review / Approve buttons).
+2. **Correct, where the reviewer already works.** In your own product with `<CorrectButton>` + `ov.correctionHandler()` ([Next.js example](examples/next-review)), from your code with `ov.correct()`, via `POST /v1/corrections`, or from the Slack message each completed run posts. [`POST /v1/capture`](docs/capture.md) files a draft-versus-sent pair from any tool with no SDK. A [Zendesk app](packages/zendesk-app) does the same inside Zendesk and is in marketplace review.
 3. **Auto-case.** Each correction freezes the step's exact input, the run's tool recordings and the expected answer as a regression case, scored on the decision fields of the answer, not its prose.
 4. **Replay.** `overturn replay --model anthropic/claude-sonnet-4-5 --since 30d` re-runs the cases with every tool answered from the recording. Side-effect tools never execute. Comma-separate models for a case × model matrix.
 5. **Report.** Regressions first, then still-wrong, then fixed, each with baseline, target and the human's correction.
@@ -61,7 +61,11 @@ Sign in, create an API key in Settings, point the SDK at `http://localhost:4000`
 
 ## Docs
 
-**Site: [overturn.run](https://overturn.run)** · **Docs: [docs.overturn.run](https://docs.overturn.run/docs/)** · [Capture (Zendesk & API)](docs/capture.md) · [SDK reference](docs/sdk.md) · [Quickstart](docs/quickstart.md) · [Fingerprint contract](docs/fingerprint.md) · [Self-hosting](docs/self-hosting.md) · [Decisions](docs/decisions.md)
+**Site: [overturn.run](https://overturn.run)** · **Docs: [docs.overturn.run](https://docs.overturn.run/docs/)** · [Capture API](docs/capture.md) · [SDK reference](docs/sdk.md) · [Quickstart](docs/quickstart.md) · [Fingerprint contract](docs/fingerprint.md) · [Self-hosting](docs/self-hosting.md) · [Decisions](docs/decisions.md)
+
+## Bounties
+
+Paused. No new bounties until the first install. Work already submitted against the open bounty issues is being reviewed and will be answered on the pull request.
 
 ## License
 
