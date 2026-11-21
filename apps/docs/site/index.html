@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Overturn — QA for AI-drafted replies</title>
-<meta name="description" content="Your support agents already review every AI draft. Overturn records what the AI wrote, what the agent sent and why, scores the AI by team and week, and replays every fix as a test before the next model or prompt change. Zendesk app, any drafting vendor. Open source.">
+<title>Overturn — every time a human fixes your agent, Overturn keeps it</title>
+<meta name="description" content="Every time a human fixes your agent, Overturn keeps it. The correction becomes a regression case scored on decision fields, and the GitHub Action replays the whole set before your next model or prompt ships. Open source, Apache-2.0, self-hosted on one Postgres.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
-<meta property="og:title" content="Overturn — QA for AI-drafted replies">
-<meta property="og:description" content="Your support agents already review every AI draft. Overturn records what the AI wrote, what the agent sent and why, scores the AI by team and week, and replays every fix as a test before the next model or prompt change. Zendesk app, any drafting vendor. Open source.">
+<meta property="og:title" content="Overturn — every time a human fixes your agent, Overturn keeps it">
+<meta property="og:description" content="Every time a human fixes your agent, Overturn keeps it. The correction becomes a regression case scored on decision fields, and the GitHub Action replays the whole set before your next model or prompt ships. Open source, Apache-2.0, self-hosted on one Postgres.">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:image" content="https://docs.overturn.run/media/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -502,10 +502,10 @@
 <div class="hero">
   <canvas class="pxfield" aria-hidden="true"></canvas>
   <div class="heroCol">
-    <div class="eyebrow">QA for AI-drafted replies</div>
-    <h1>Every fix your team makes becomes a&nbsp;test.</h1>
-    <p class="lede">Capture the fix where your team already makes it. Replay it before the next model ships.</p>
-    <div class="ctas"><a class="btn primary" href="/docs/capture/" data-cta="hero_zendesk_app">Install the Zendesk app</a><a class="btn" href="https://app.overturn.run/login" data-cta="hero_start_free">Start free</a><a class="btn" href="/docs/quickstart/" data-cta="hero_docs">Read the docs</a></div>
+    <div class="eyebrow">Regression tests from human corrections</div>
+    <h1>Every time a human fixes your agent, Overturn keeps&nbsp;it.</h1>
+    <p class="lede">You built the agent. Someone reviews what it writes and fixes it. Overturn keeps every fix and runs it as a test before you ship the next model.</p>
+    <div class="ctas"><a class="btn primary" href="/docs/quickstart/" data-cta="hero_quickstart">Run the quickstart</a><a class="btn" href="https://app.overturn.run/login" data-cta="hero_start_free">Start free</a><a class="btn" href="https://github.com/overturn-ai/overturn" data-cta="hero_github">GitHub</a></div>
     <div class="install"><div class="cmd"><span class="logos"><span style="background:#111">TS</span><span style="background:#3572a5">Py</span><span style="background:#f5a623">OT</span></span><code id="cmd">npm i @overturn-ai/sdk</code></div><button type="button" aria-label="Copy" data-copy="cmd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
     <p class="sor">Open beta · Apache-2.0 · Zendesk app · Salesforce next</p>
   </div>
@@ -551,9 +551,9 @@
   <div class="qs">
     <div>
       <div class="steps" id="steps">
-        <div class="step on" data-i="0"><div class="n">1</div><div><h3>Capture where the expert works</h3><p>Install the Zendesk app: it watches the reply box for the AI draft, diffs it against what the expert sends, and asks for a one-line reason. Any other tool posts the same thing to <code>/v1/capture</code>. No SDK, nothing to instrument.</p></div><span class="bar"></span></div>
+        <div class="step on" data-i="0"><div class="n">1</div><div><h3>Capture where the reviewer works</h3><p>Wrap the model client you already have and every prompt, tool call and answer is recorded. Your own review UI files the fix with <code>&lt;CorrectButton&gt;</code> or <code>ov.correct()</code>; anything else posts the same thing to <code>/v1/capture</code>.</p></div><span class="bar"></span></div>
         <div class="step" data-i="1"><div class="n">2</div><div><h3>Or record the agent itself</h3><p>Wrap the OpenAI, Anthropic or Vercel AI SDK client you already have, or point an OpenTelemetry exporter at <code>/v1/traces</code>; then approve, edit or reject in Slack, with <code>&lt;CorrectButton&gt;</code>, or from code. Either way the case freezes the original, the fix and the reason.</p></div><span class="bar"></span></div>
-        <div class="step" data-i="2"><div class="n">3</div><div><h3>Replay, then train</h3><p>Replay the whole log against any model or prompt before you ship; the report leads with the old fixes that broke. Export the same log as training data, fine-tune an open model, and promote it only when it passes the suite.</p></div><span class="bar"></span></div>
+        <div class="step" data-i="2"><div class="n">3</div><div><h3>Replay before you ship</h3><p>Replay the whole log against any model or prompt before you ship; the report leads with the old fixes that broke. The same command runs in the GitHub Action and fails the pull request on a regression.</p></div><span class="bar"></span></div>
       </div>
       <div class="foot"><a class="btn primary" href="https://app.overturn.run/login" data-cta="quickstart_api_key">Get API key</a><a class="link" href="/docs/quickstart/" data-cta="quickstart_full">Full quickstart →</a><button class="pp" id="qs-pp" type="button" aria-label="Pause"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></button></div>
     </div>
@@ -607,11 +607,11 @@
 <span class="y">fixed</span>       reject   claims-reply zd:48290   payout tool not called
 
 <span class="d">report</span>  https://app.overturn.run/replays/01a156ea
-<span class="p">$</span> overturn train --base meta-llama/Meta-Llama-3.1-8B-Instruct-Reference --agent claims-reply
-<span class="d">312 rows · LoRA on Together · gate: no regressions, pass rate ≥ incumbent</span>
-<span class="g">passed</span>      gate 25/25 · shadow on · promote when you're ready
+<span class="p">$</span> overturn replay --prompt claims-reply@v4 --fail-on-regression
+<span class="d">the same command the GitHub Action runs on every pull request</span>
+<span class="g">passed</span>      25/25 · no regressions · exit 0
 <span class="p">$</span><span class="cursor"></span></div>
-          <div class="hint">Regressions are listed first. The same replay runs in the GitHub Action and blocks the pull request; the same log trains the model, and nothing is promoted that fails the suite.</div>
+          <div class="hint">Regressions are listed first. The same replay runs in the GitHub Action and blocks the pull request that changed the prompt or the model.</div>
         </div>
       </div>
     </div>
@@ -648,7 +648,7 @@
         <div class="fstep on" data-i="0"><h3>Record</h3><p>The Zendesk app records the AI draft and the thread the agent saw; or wrap the model client you already have and every prompt, tool call and answer is recorded with a fingerprint.</p></div>
         <div class="fstep" data-i="1"><h3>Correct</h3><p>The agent sends the reply as drafted, or changes it and picks a reason in one click, in the help desk they already use. The case freezes with the AI's draft, the agent's fix, and the reason.</p></div>
         <div class="fstep" data-i="2"><h3>Replay</h3><p>Run every case against a new model or prompt from the CLI, the app, or CI. Tools are answered from the recording; nothing fires twice.</p></div>
-        <div class="fstep" data-i="3"><h3>Report, then train</h3><p>Regressions first, with the baseline beside the new answer, and the weekly scorecard: untouched rate, fixes by reason, time to send. The same log can train an open model you own, promoted only when it passes the suite.</p></div>
+        <div class="fstep" data-i="3"><h3>Report, and gate the change</h3><p>Regressions first, with the baseline beside the new answer, and the weekly scorecard: untouched rate, fixes by reason, time to send. The Action posts the same report on the pull request and fails it on a regression.</p></div>
       </div>
     </div>
     <div class="fpanel" id="fpanel">
@@ -727,14 +727,14 @@
   <div class="shead">
     <div class="eyebrow">Capabilities</div>
     <h2>What Overturn handles</h2>
-    <p class="sub">Capture, scorecard, replay, and a model you own at the end of it.</p>
+    <p class="sub">Capture the fix, score the change, and block the pull request that breaks it.</p>
   </div>
   <div class="feat">
     <div class="tick"><h4>Capture at the point of fix</h4><p>No one opens another dashboard. The Zendesk app diffs the AI draft against what the expert sent and asks for one line on why; Slack, <code>&lt;CorrectButton&gt;</code> and <code>/v1/capture</code> cover everything else. The fix is recorded with the reason attached.</p></div>
-    <div class="tick"><h4>The AI draft scorecard</h4><p>Untouched rate, fixes by reason, time to send: the QA numbers a support lead already reports, for AI drafts, by team and by week. Never a per-agent rate. The correction record and the regression suite come with it.</p></div>
+    <div class="tick"><h4>The scorecard</h4><p>Untouched rate, fixes by reason, time to send, by team and by week. Never a per-person rate. The correction record and the regression suite come with it.</p></div>
     <div class="tick"><h4>Safe replay</h4><p>Tool calls are matched to recordings by fingerprint, so a model that takes a different path still gets the right answers. Nothing is emailed, refunded or written twice.</p></div>
     <div class="tick"><h4>Can a cheaper model do the job?</h4><p>Replay the same suite against several models at once and read them side by side: pass rate, regressions and cost per run, scored on your team's own corrections.</p></div>
-    <div class="tick"><h4>A model you own</h4><p>Export every correction as SFT or DPO JSONL, fine-tune an open model on Together or in your own cloud, gate it against the suite, shadow it on live traffic, promote it by hand. Or pull the closest fixes into your prompt with <code>ov.examples()</code> today.</p></div>
+    <div class="tick"><h4>A corpus that is yours</h4><p>Every correction exports as JSONL, so the record of how your team fixes its agent leaves with you. Pull the closest past fixes straight into your prompt with <code>ov.examples()</code>.</p></div>
     <div class="tick"><h4>Decision fields</h4><p>Scoring looks at the fields the human changed, not the phrasing. A judge model handles free text, and says which model it used.</p></div>
   </div>
   <div class="cards">
@@ -829,7 +829,7 @@
 
 <div class="cta">
   <h2>Start with one inbox</h2>
-  <p>Install the Zendesk app, send one reply, and watch the first fix become a QA case with its reason. Engineers: wrap the client you already have; ten minutes end to end with the example agent.</p>
+  <p>Wrap the model client you already have, correct one output, and watch it become a case you can replay. The example agent runs the whole loop offline in under two minutes.</p>
   <div class="ctas" style="justify-content:center;margin:0"><a class="btn primary" href="https://app.overturn.run/login">Start free</a><a class="btn" href="https://github.com/overturn-ai/overturn">GitHub</a></div>
 </div>
 </main>
@@ -944,9 +944,9 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   {ask:'Tighten the prompt: never approve a payout before the inspection report.',who:'Example agent · prompt claims-reply@v3',
    a:[['overturn replay --prompt claims-reply@v3','38 s · $0.02'],['zd:48377 fixed · payout tool not called','rejected in the example set'],['0 regressions','25/25 expert fixes hold']],ares:'<b>The rejection became the test.</b> The case the senior adjuster rejected is the one that proves the fix.',
    b:[['deploy the prompt','—'],['hope nobody hits the payout path','?'],['re-read 200 tickets to be sure','afternoon']],bres:'<b>No proof.</b> Nothing tells you the other 24 cases still pass.'},
-  {ask:'Train on 300 adjuster fixes and see if the model can take the first pass.',who:'Example agent · owned model',
-   a:[['overturn train --base llama-3.1-8b','20 min · gate 25/25'],['shadow on live tickets','every answer scored against the suite'],['promote by hand, or do not','you decide, with the report in front of you']],ares:'<b>Judgment that compounds.</b> Whatever the experts still change gets captured too.',
-   b:[['keep renting the frontier model','$ per call, forever'],['fixes vanish into tickets','nothing learns'],['experts re-check every case','senior time']],bres:'<b>Nothing improves.</b> The same mistakes, corrected by the same people, every week.'}];
+  {ask:'A pull request changes the agent prompt. Can it ship?',who:'Example agent · CI gate',
+   a:[['the Action replays every case','on the pull request itself'],['1 regression, commented inline','the reviewer sees the fix it broke'],['the check fails','nothing merges']],ares:'<b>Caught in review.</b> The case that failed is a fix a human already made.',
+   b:[['approve on the diff alone','looks fine'],['merge','green'],['find out from the people reviewing output','next week']],bres:'<b>Found in production.</b> Nothing told the reviewer which past fix the change undid.'}];
   const el=document.getElementById('cmp'),dots=document.getElementById('cmp-dots');let i=0,paused=reduce,timer;
   const row=(l)=>`<div class="line"><span class="w">${l[0].split(' ')[0]}</span><span>${l[0].split(' ').slice(1).join(' ')}</span><span class="m">${l[1]}</span></div>`;
   function render(n){i=n;const d=data[n];el.innerHTML=`<div class="ask"><span class="av"></span><div><div class="who">${d.who}</div><div class="bub">${d.ask}</div></div></div>
